@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vintage STuff here</title>
+    <style>
+      html {
+        border: 10px solid blue;
+        height: 100%;
+        box-sizing: border-box; /* border in the element's total width and height */
+        animation: borderAnimation 2s infinite;
+      }
+
+      @keyframes borderAnimation {
+        0% {
+          border-color: blue;
+        }
+        25% {
+          border-color: white;
+        }
+        50% {
+          border-color: yellow;
+        }
+        75% {
+          border-color: cyan;
+        }
+        100% {
+          border-color: blue;
+        }
+      }
+
+      body {
+        color: blue;
+        font-family: monospace;
+        background-color: black;
+        font-size: 20px;
+        margin: 0;
+        height: 100%;
+        box-sizing: border-box;
+        animation: textAnimation 2s infinite;
+      }
+
+      @keyframes textAnimation {
+        0% {
+          color: blue;
+        }
+        25% {
+          color: white;
+        }
+        50% {
+          color: yellow;
+        }
+        75% {
+          color: cyan;
+        }
+        100% {
+          color: blue;
+        }
+      }
+
+      /* Optionally, center content within the border */
+      .container {
+        width: 80%; /* Adjust width as needed */
+        margin: 0 auto; /* Center the container horizontally */
+      }
+
+      header {
+        text-align: center; /* Center the content horizontally */
+      }
+
+      header img {
+        width: 100%;
+        height: 150px;
+      }
+
+      /* CSS for the hover message */
+      .message {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        padding: 10px 20px;
+        background-color: rgba(0, 0, 0, 0.7);
+        color: blue;
+        border-radius: 5px;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
+      }
+
+      .message.show {
+        opacity: 1;
+      }
+
+      .image1 {
+        position: absolute; /* Position the image absolutely */
+        bottom: 20px;
+        right: 20px;
+        opacity: 0.5;
+        z-index: -1;
+      }
+
+      .background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0.25;
+        z-index: -1;
+      }
+
+      .menuDisc {
+        position: absolute; /* Position the image absolutely */
+        max-width: 10%;
+        max-height: auto;
+        top: 20px;
+        left: 20px;
+        opacity: 1; /* Set opacity */
+        z-index: 10; /* Push the image to the back */
+      }
+
+      /* CSS for the screen saver animation */
+      .imageCat {
+        position: fixed;
+        width: 100px;
+        height: auto;
+        opacity: 0.5;
+        animation: bounce 4s infinite alternate; /* Animation properties */
+      }
+
+      /* Keyframes for the bounce animation */
+      @keyframes bounce {
+        from {
+          transform: translateY(0); /* Start position */
+        }
+        to {
+          transform: translateY(-100px); /* End position */
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header section -->
+    <header>
+      <img src="resources/header2.gif" alt="Header Image" />
+    </header>
+
+    <!-- The rest section -->
+    <div class="container">
+      <h1>Hola MUNDO!!!!!</h1>
+      <p>
+        <a href="particles/dynamic.html">
+        Sunt anim culpa enim anim exercitation non non veniam officia quis
+        commodo ad irure. Labore sit incididunt et fugiat commodo esse.
+        Reprehenderit laboris labore esse eu ea laborum. Incididunt commodo
+        deserunt dolore mollit commodo mollit dolor do. Sit id Lorem eiusmod
+        minim officia id magna commodo. Ex et culpa pariatur ex incididunt.
+        </a>
+      </p>
+
+      <!-- Images -->
+      <img class="image1" src="resources/cheetos.gif" alt="ahhhhhhhh" />
+      <img class="background" src="resources/sparkles.webp" alt="ahhhhhhhh" />
+
+      <!-- Menu Selectors -->
+      <img
+        class="menuDisc"
+        src="resources/disc.gif"
+        alt="Hover and Click Image"
+      />
+      <div id="hoverMessage" class="message">Hover to see current song</div>
+      <script src="script.js"></script>
+    </div>
+
+    <!-- THE CATS -->
+    <img class="imageCat" src="resources/cat1.gif"/>
+    <img class="imageCat" src="resources/cat2.gif"/>
+    <img class="imageCat" src="resources/cat3.gif"/>
+    <img class="imageCat" src="resources/cat4.gif"/>
+
+    <audio id="audioPlayer" autoplay>
+      <source src="resources/audio/woman.mp3" type="audio/mpeg" />
+      Your browser does not support the audio element.
+    </audio>
+  </body>
+</html>
