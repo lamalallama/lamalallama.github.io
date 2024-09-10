@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text Gallery with Admin Privileges</title>
+    <title>Galeria Cetis58</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -47,17 +47,17 @@
     </style>
 </head>
 <body>
-    <h1>Text Gallery</h1>
+    <h1>Galería de Textos</h1>
     
-    <input type="text" id="titleInput" placeholder="Enter title">
+    <input type="text" id="titleInput" placeholder="Ingresa el título">
     <br><br>
-    <textarea id="textInput" placeholder="Enter text" rows="4" cols="50"></textarea>
+    <textarea id="textInput" placeholder="Ingresa el texto" rows="4" cols="50"></textarea>
     <br><br>
-    <button id="addPostBtn">Add Post</button>
+    <button id="addPostBtn">Añadir Publicación</button>
     <br><br>
-    <label for="passwordInput">Enter Password (for edit/delete):</label>
+    <label for="passwordInput">Ingresa Contraseña (para editar/eliminar):</label>
     <input type="password" id="passwordInput">
-    <button id="verifyBtn">Verify</button>
+    <button id="verifyBtn">Verificar</button>
 
     <div class="gallery" id="postGallery"></div>
 
@@ -71,7 +71,7 @@
         const addPostBtn = document.getElementById('addPostBtn');
         
         const storedPosts = JSON.parse(localStorage.getItem('posts')) || [];
-        const hashedPassword = 'a0ed98b4a2cfb88a2533757f7201e454'; 
+        const hashedPassword = '4be365797a14c860e0fdb46398a299ac'; 
 
         let adminMode = false;
 
@@ -90,7 +90,7 @@
                 postText.innerText = postData.text;
 
                 const deleteBtn = document.createElement('button');
-                deleteBtn.innerText = 'Delete';
+                deleteBtn.innerText = 'Eliminar';
                 deleteBtn.classList.add('delete-btn');
                 deleteBtn.onclick = () => {
                     if (adminMode) {
@@ -98,7 +98,7 @@
                         localStorage.setItem('posts', JSON.stringify(storedPosts));
                         displayPosts();
                     } else {
-                        alert('You need admin privileges to delete.');
+                        alert('Necesitas privilegios de administrador para eliminar.');
                     }
                 };
 
@@ -123,7 +123,7 @@
                 localStorage.setItem('posts', JSON.stringify(storedPosts));
                 displayPosts();
             } else {
-                alert('Please enter both title and text.');
+                alert('Por favor, ingresa tanto el título como el texto.');
             }
         });
 
@@ -132,11 +132,11 @@
             const inputHashed = CryptoJS.MD5(inputPassword).toString();
             
             if (inputHashed === hashedPassword) {
-                alert('Admin mode enabled.');
+                alert('Modo administrador activado.');
                 adminMode = true;
                 displayPosts();
             } else {
-                alert('Incorrect password.');
+                alert('Contraseña incorrecta.');
                 adminMode = false;
             }
         });
