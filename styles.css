@@ -3,10 +3,10 @@
 :root {
   --primary-color: #3498db;
   --secondary-color: #2ecc71;
-  --background-color: #f4f4f4;
-  --text-color: #333;
+  --background-color: #212121; /* Darker background color */
+  --text-color: #fff; /* White text color */
   --border-radius: 8px;
-  --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 }
 
 body {
@@ -22,12 +22,16 @@ body {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+  background-color: #333; /* Darker container background */
+  border-radius: var(--border-radius);
+  box-shadow: var(--box-shadow);
 }
 
 h1 {
   text-align: center;
   color: var(--primary-color);
   margin-bottom: 30px;
+  font-size: 24px; /* Larger font size */
 }
 
 .input-group {
@@ -40,9 +44,11 @@ textarea {
   width: 100%;
   padding: 10px;
   margin-bottom: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid #444; /* Darker border color */
   border-radius: var(--border-radius);
   font-size: 16px;
+  background-color: #333; /* Darker input background */
+  color: #fff; /* White input text color */
 }
 
 textarea {
@@ -80,7 +86,7 @@ button:hover {
 }
 
 .post-container {
-  background-color: white;
+  background-color: #333; /* Darker post container background */
   border-radius: var(--border-radius);
   box-shadow: var(--box-shadow);
   overflow: hidden;
@@ -101,6 +107,7 @@ button:hover {
 
 .post-text {
   padding: 15px;
+  color: #ccc; /* Lighter post text color */
 }
 
 .delete-btn {
@@ -129,7 +136,6 @@ button:hover {
   .gallery {
     grid-template-columns: 1fr;
   }
-
   .post-container {
     margin-bottom: 20px;
   }
