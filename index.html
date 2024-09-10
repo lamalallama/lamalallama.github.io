@@ -15,6 +15,12 @@
     <button id="addPostBtn">Añadir Publicación</button>
   </div>
 
+  <div id="adminPanel" style="display:none;">
+    <input type="password" id="adminPassword" placeholder="Contraseña de Administrador">
+    <button id="adminToggleBtn">Activar Modo Administrador</button>
+    <button id="purgeBtn">Eliminar Todas las Publicaciones</button>
+  </div>
+
   <div id="postList"></div>
 
   <!-- Import CryptoJS for MD5 hashing -->
@@ -79,13 +85,13 @@
         postElement.innerHTML = `
           <h3>${post.title}</h3>
           <p>${post.text}</p>
-          <button class="deleteBtn" data-id="${postId}">Eliminar</button>
+          <button class="deleteBtn" data-id="${postId}" style="display:none;">Eliminar</button>
         `;
 
         // Append the post to the list
         postList.appendChild(postElement);
 
-        // Add delete functionality
+        // Add delete functionality if in admin mode
         const deleteBtn = postElement.querySelector('.deleteBtn');
         deleteBtn.addEventListener('click', function() {
           const enteredPassword = prompt('Introduce la contraseña para eliminar la publicación:');
@@ -97,6 +103,30 @@
           }
         });
       });
+    });
+
+    // Toggle admin mode
+    const adminToggleBtn = document.getElementById('adminToggleBtn');
+    adminToggleBtn.addEventListener('click', function() {
+      const adminPanel = document.getElementById('adminPanel');
+      const adminPassword = document.getElementById('adminPassword').value.trim();
+      if (md5(adminPassword) === '4be365797a14c860e0fdb46398a299ac') {
+        adminPanel.style.display = 'block'; // Show admin panel
+      } else {
+        alert('Contraseña de administrador incorrecta.');
+      }
+    });
+
+    // Purge all posts
+    const purgeBtn = document.getElementById('purgeBtn');
+    purgeBtn.addEventListener('click', function() {
+      const confirmation = prompt('¿Estás seguro? Escribe "ESTOY SEGURO" para confirmar.');
+      if (confirmation === 'ESTOY SEGURO') {
+        // Remove all posts from Realtime Database
+        postsRef.remove();
+      } else {
+        alert('Confirmación incorrecta. Operación cancelada.');
+      }
     });
 
     // MD5 hash function
