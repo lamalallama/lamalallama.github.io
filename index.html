@@ -1,31 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hola Viviana</title>
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        background-color: #f0f0f0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        margin: 0;
-    }
-    .cool-text {
-        font-size: 3em;
-        font-weight: bold;
-        color: #3b5998; /* Facebook blue */
-        text-align: center;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-    }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload and Display</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-    <div class="cool-text">
-        Hola Viviana
-    </div>
+    <h1>Upload and Display an Image</h1>
+    <input type="file" id="imageInput" accept="image/*">
+    <div id="imageContainer"></div>
+
+    <script>
+        const imageInput = document.getElementById('imageInput');
+        const imageContainer = document.getElementById('imageContainer');
+
+        imageInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(file);
+                img.onload = () => URL.revokeObjectURL(img.src);  // Release memory
+                imageContainer.innerHTML = '';  // Clear previous images
+                imageContainer.appendChild(img);
+            }
+        });
+    </script>
 </body>
 </html>
