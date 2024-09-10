@@ -1,4 +1,9 @@
 <!DOCTYPE html>
+<!-- Codigo Hecho Por: Erick Daniel Rivera -->
+<!-- Escuela: Cetis 58 -->
+<!-- 10/9/2024 -->
+<!-- Servidor Dinamico: Firebase - Google -->
+<!-- Servidor Estatico: Github -->
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -19,6 +24,7 @@
     .container {
       max-width: 800px;
       margin: 0 auto;
+      position: relative;
     }
     .input-container, #userPanel, #adminPanel {
       margin-bottom: 20px;
@@ -56,9 +62,10 @@
       bottom: 5px;
       left: 10px;
       background-color: #fff;
-      padding: 5px;
+      padding: 2px 5px;
       border: none;
-      font-size: 20px;
+      font-size: 16px;
+      width: auto;
     }
     .post-date {
       font-size: 0.8em;
@@ -80,21 +87,40 @@
       top: 10px;
       right: 10px;
     }
-    #userPanel, #adminPanel {
+    #userPanel {
+      position: absolute;
+      top: -60px;
+      left: 0;
+      width: auto;
+      background-color: #eee;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    #loginBtn {
+      width: auto;
+    }
+    #adminPanel {
       background-color: #eee;
       padding: 15px;
       border-radius: 5px;
     }
+    .login-form {
+      display: none;
+    }
   </style>
 </head>
 <body>
-  <h1>Galería de Publicaciones</h1>
   <div class="container">
     <div id="userPanel">
-      <input type="text" id="usernameInput" placeholder="Nombre de usuario">
-      <input type="password" id="userPassword" placeholder="Contraseña">
-      <button id="loginBtn">Iniciar sesión / Registrarse</button>
+      <button id="showLoginBtn">Iniciar sesión</button>
+      <div class="login-form">
+        <input type="text" id="usernameInput" placeholder="Nombre de usuario">
+        <input type="password" id="userPassword" placeholder="Contraseña">
+        <button id="loginBtn">Iniciar sesión / Registrarse</button>
+      </div>
     </div>
+    
+    <h1>Galería de Publicaciones</h1>
 
     <div class="input-container">
       <input type="text" id="titleInput" placeholder="Título">
@@ -137,6 +163,13 @@
 
     let currentUser = null;
 
+    const showLoginBtn = document.getElementById('showLoginBtn');
+    const loginForm = document.querySelector('.login-form');
+    showLoginBtn.addEventListener('click', function() {
+      loginForm.style.display = loginForm.style.display === 'none' ? 'block' : 'none';
+      showLoginBtn.textContent = loginForm.style.display === 'none' ? 'Iniciar sesión' : 'Cancelar';
+    });
+
     const loginBtn = document.getElementById('loginBtn');
     loginBtn.addEventListener('click', async function() {
       const username = document.getElementById('usernameInput').value.trim();
@@ -151,6 +184,8 @@
           if (md5(password) === snapshot.val().password) {
             currentUser = username;
             alert(`Bienvenido de vuelta, ${username}!`);
+            loginForm.style.display = 'none';
+            showLoginBtn.textContent = `Cerrar sesión (${username})`;
           } else {
             alert('Contraseña incorrecta.');
           }
@@ -159,6 +194,8 @@
           set(userRef, { password: md5(password) });
           currentUser = username;
           alert(`Bienvenido, ${username}! Tu cuenta ha sido creada.`);
+          loginForm.style.display = 'none';
+          showLoginBtn.textContent = `Cerrar sesión (${username})`;
         }
       } else {
         alert('Por favor, ingresa un nombre de usuario y contraseña.');
@@ -170,18 +207,16 @@
       const title = document.getElementById('titleInput').value.trim();
       const text = document.getElementById('textInput').value.trim();
 
-      if (currentUser && title && text) {
+      if (title && text) {
         push(postsRef, {
           title: title,
           text: text,
           date: new Date().toISOString(),
-          username: currentUser
+          username: currentUser || 'Anónimo'
         });
 
         document.getElementById('titleInput').value = '';
         document.getElementById('textInput').value = '';
-      } else if (!currentUser) {
-        alert('Por favor, inicia sesión para publicar.');
       } else {
         alert('Por favor, ingresa tanto el título como el texto.');
       }
@@ -218,7 +253,7 @@
           </div>
           <button class="toggle-content">▼</button>
           <span class="post-date">${formattedDate}</span>
-          <span class="post-username">${post.username || 'Anónimo'}</span>
+          <span class="post-username">${post.username}</span>
           <button class="deleteBtn" data-id="${post.id}">Eliminar</button>
         `;
         
