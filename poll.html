@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Poll</title>
+</head>
+<body>
+    <h2 id="pollQuestion">Loading poll...</h2>
+    <form id="pollVoteForm">
+        <div id="pollOptions"></div>
+        <button type="submit" id="voteButton">Submit Vote</button>
+    </form>
+    <div id="pollResult"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+        import { getDatabase, ref, onValue, set, get } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCjVxYOmna_tyxGtbIKYS_wpYQJ1Vg6ws0",
+            authDomain: "galeria-cetis58.firebaseapp.com",
+            databaseURL: "https://galeria-cetis58-default-rtdb.firebaseio.com/"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        const pollId = new URLSearchParams(window.location.search).get('pollId');
+        console.log("Poll ID:", pollId);
+
+        if (pollId) {
+            const pollRef = ref(db, 'polls/' + pollId);
+            const votesRef = ref(db, 'polls/' + pollId + '/votes');
+            const userVoteKey = `voted_${pollId}`;
+
+            // Check if the user has already voted
+            const userHasVoted = localStorage.getItem(userVoteKey);
+            const voteButton = document.getElementById('voteButton');
+
+            if (userHasVoted) {
+                voteButton.disabled = true;
+                voteButton.textContent = "You have already voted";
+            }
+
+            onValue(pollRef, (snapshot) => {
+                const pollData = snapshot.val();
+
+                if (pollData) {
+                    console.log("Poll Data:", pollData);
+
+                    const pollQuestion = document.getElementById('pollQuestion');
+                    pollQuestion.textContent = pollData.question;
+
+                    const pollOptions = document.getElementById('pollOptions');
+                    pollOptions.innerHTML = '';
+
+                    pollData.options.forEach((option, index) => {
+                        pollOptions.innerHTML += `
+                            <div>
+                                <input type="radio" name="pollOption" value="${index}" id="option${index}" required>
+                                <label for="option${index}">${option}</label>
+                            </div>
+                        `;
+                    });
+
+                    // Display poll results
+                    displayResults();
+
+                } else {
+                    document.getElementById('pollQuestion').textContent = "Poll not found.";
+                }
+            }, (error) => {
+                console.error("Error fetching poll:", error);
+                document.getElementById('pollQuestion').textContent = "Error loading poll.";
+            });
+
+            document.getElementById('pollVoteForm').addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (userHasVoted) return;
+
+                const selectedOption = document.querySelector('input[name="pollOption"]:checked');
+
+                if (selectedOption) {
+                    const selectedIndex = selectedOption.value;
+                    const userVotesRef = ref(db, 'polls/' + pollId + '/votes');
+
+                    // Get current votes
+                    get(userVotesRef).then((snapshot) => {
+                        const currentVotes = snapshot.val() || {};
+
+                        // Update vote count for selected option
+                        const updatedVotes = {
+                            ...currentVotes,
+                            [selectedIndex]: (currentVotes[selectedIndex] || 0) + 1
+                        };
+
+                        // Set updated votes in the database
+                        set(userVotesRef, updatedVotes).then(() => {
+                            // Mark user as having voted
+                            localStorage.setItem(userVoteKey, 'true');
+                            // Refresh the results
+                            displayResults();
+                            // Disable vote button
+                            voteButton.disabled = true;
+                            voteButton.textContent = "You have already voted";
+                        }).catch((error) => {
+                            console.error("Error updating votes:", error);
+                        });
+                    });
+                } else {
+                    alert("Please select an option before submitting.");
+                }
+            });
+
+            function displayResults() {
+                get(votesRef).then((snapshot) => {
+                    const votesData = snapshot.val();
+                    const pollOptions = document.getElementById('pollOptions');
+                    const resultsDiv = document.getElementById('pollResult');
+                    
+                    if (votesData) {
+                        let resultsHtml = '<h3>Results:</h3>';
+                        const totalVotes = Object.values(votesData).reduce((acc, votes) => acc + votes, 0);
+
+                        pollOptions.querySelectorAll('input[name="pollOption"]').forEach((input, index) => {
+                            const optionLabel = input.nextElementSibling.textContent;
+                            const votes = votesData[index] || 0;
+                            const percentage = totalVotes ? ((votes / totalVotes) * 100).toFixed(2) : 0;
+                            resultsHtml += `
+                                <div>
+                                    ${optionLabel}: ${votes} vote(s) (${percentage} %)
+                                </div>
+                            `;
+                        });
+
+                        resultsDiv.innerHTML = resultsHtml;
+                    } else {
+                        resultsDiv.innerHTML = "<h3>No votes yet.</h3>";
+                    }
+                }).catch((error) => {
+                    console.error("Error fetching votes:", error);
+                });
+            }
+
+        } else {
+            document.getElementById('pollQuestion').textContent = "No poll ID provided.";
+        }
+    </script>
+</body>
+</html>
