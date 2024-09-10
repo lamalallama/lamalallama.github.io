@@ -20,7 +20,7 @@
       max-width: 800px;
       margin: 0 auto;
     }
-    .input-container {
+    .input-container, #userPanel, #adminPanel {
       margin-bottom: 20px;
     }
     input, textarea, button {
@@ -45,19 +45,20 @@
     .post-content {
       max-height: 100px;
       overflow: hidden;
-      position: relative;
+      transition: max-height 0.3s ease;
     }
     .post-content.expanded {
       max-height: none;
     }
-    .read-more {
-      color: blue;
+    .toggle-content {
       cursor: pointer;
       position: absolute;
-      bottom: 0;
-      right: 0;
+      bottom: 5px;
+      left: 10px;
       background-color: #fff;
-      padding: 0 5px;
+      padding: 5px;
+      border: none;
+      font-size: 20px;
     }
     .post-date {
       font-size: 0.8em;
@@ -66,20 +67,35 @@
       bottom: 5px;
       right: 10px;
     }
+    .post-username {
+      font-size: 0.9em;
+      color: #444;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+    }
     .deleteBtn {
       display: none;
       position: absolute;
       top: 10px;
       right: 10px;
     }
-    #adminPanel {
-      margin-top: 20px;
+    #userPanel, #adminPanel {
+      background-color: #eee;
+      padding: 15px;
+      border-radius: 5px;
     }
   </style>
 </head>
 <body>
   <h1>Galería de Publicaciones</h1>
   <div class="container">
+    <div id="userPanel">
+      <input type="text" id="usernameInput" placeholder="Nombre de usuario">
+      <input type="password" id="userPassword" placeholder="Contraseña">
+      <button id="loginBtn">Iniciar sesión / Registrarse</button>
+    </div>
+
     <div class="input-container">
       <input type="text" id="titleInput" placeholder="Título">
       <textarea id="textInput" placeholder="Texto"></textarea>
@@ -101,7 +117,7 @@
   <!-- Firebase Setup -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-    import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
+    import { getDatabase, ref, push, set, get, onValue, remove } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCjVxYOmna_tyxGtbIKYS_wpYQJ1Vg6ws0",
@@ -117,21 +133,55 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const postsRef = ref(db, 'posts');
+    const usersRef = ref(db, 'users');
+
+    let currentUser = null;
+
+    const loginBtn = document.getElementById('loginBtn');
+    loginBtn.addEventListener('click', async function() {
+      const username = document.getElementById('usernameInput').value.trim();
+      const password = document.getElementById('userPassword').value.trim();
+      
+      if (username && password) {
+        const userRef = ref(db, `users/${username}`);
+        const snapshot = await get(userRef);
+        
+        if (snapshot.exists()) {
+          // User exists, check password
+          if (md5(password) === snapshot.val().password) {
+            currentUser = username;
+            alert(`Bienvenido de vuelta, ${username}!`);
+          } else {
+            alert('Contraseña incorrecta.');
+          }
+        } else {
+          // New user, register
+          set(userRef, { password: md5(password) });
+          currentUser = username;
+          alert(`Bienvenido, ${username}! Tu cuenta ha sido creada.`);
+        }
+      } else {
+        alert('Por favor, ingresa un nombre de usuario y contraseña.');
+      }
+    });
 
     const addPostBtn = document.getElementById('addPostBtn');
     addPostBtn.addEventListener('click', function() {
       const title = document.getElementById('titleInput').value.trim();
       const text = document.getElementById('textInput').value.trim();
 
-      if (title && text) {
+      if (currentUser && title && text) {
         push(postsRef, {
           title: title,
           text: text,
-          date: new Date().toISOString()
+          date: new Date().toISOString(),
+          username: currentUser
         });
 
         document.getElementById('titleInput').value = '';
         document.getElementById('textInput').value = '';
+      } else if (!currentUser) {
+        alert('Por favor, inicia sesión para publicar.');
       } else {
         alert('Por favor, ingresa tanto el título como el texto.');
       }
@@ -165,9 +215,10 @@
           <h3>${post.title}</h3>
           <div class="post-content">
             <p>${post.text}</p>
-            ${post.text.length > 100 ? '<span class="read-more">Leer más</span>' : ''}
           </div>
+          <button class="toggle-content">▼</button>
           <span class="post-date">${formattedDate}</span>
+          <span class="post-username">${post.username || 'Anónimo'}</span>
           <button class="deleteBtn" data-id="${post.id}">Eliminar</button>
         `;
         
@@ -182,14 +233,12 @@
           }
         });
 
-        const readMoreBtn = postElement.querySelector('.read-more');
-        if (readMoreBtn) {
-          readMoreBtn.addEventListener('click', function() {
-            const content = this.parentElement;
-            content.classList.toggle('expanded');
-            this.textContent = content.classList.contains('expanded') ? 'Leer menos' : 'Leer más';
-          });
-        }
+        const toggleBtn = postElement.querySelector('.toggle-content');
+        const content = postElement.querySelector('.post-content');
+        toggleBtn.addEventListener('click', function() {
+          content.classList.toggle('expanded');
+          this.textContent = content.classList.contains('expanded') ? '▲' : '▼';
+        });
       });
     });
 
