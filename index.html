@@ -3,37 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Upload and Display</title>
+    <title>Text Gallery with Admin Privileges</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            margin-top: 50px;
-        }
-        img {
-            max-width: 100%;
-            height: auto;
             margin-top: 20px;
+        }
+        .gallery {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .post-container {
+            border: 2px solid #000;
+            padding: 10px;
+            margin: 10px;
+            width: 50%;
+            text-align: left;
+            position: relative;
+        }
+        .post-title {
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .post-text {
+            margin-top: 10px;
+        }
+        .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+            display: none;
+        }
+        .post-container:hover .delete-btn {
+            display: block;
         }
     </style>
 </head>
 <body>
-    <h1>Upload and Display an Image</h1>
-    <input type="file" id="imageInput" accept="image/*">
-    <div id="imageContainer"></div>
+    <h1>Text Gallery</h1>
+    
+    <input type="text" id="titleInput" placeholder="Enter title">
+    <br><br>
+    <textarea id="textInput" placeholder="Enter text" rows="4" cols="50"></textarea>
+    <br><br>
+    <button id="addPostBtn">Add Post</button>
+    <br><br>
+    <label for="passwordInput">Enter Password (for edit/delete):</label>
+    <input type="password" id="passwordInput">
+    <button id="verifyBtn">Verify</button>
 
+    <div class="gallery" id="postGallery"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script>
-        const imageInput = document.getElementById('imageInput');
-        const imageContainer = document.getElementById('imageContainer');
+        const titleInput = document.getElementById('titleInput');
+        const textInput = document.getElementById('textInput');
+        const postGallery = document.getElementById('postGallery');
+        const passwordInput = document.getElementById('passwordInput');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const addPostBtn = document.getElementById('addPostBtn');
+        
+        const storedPosts = JSON.parse(localStorage.getItem('posts')) || [];
+        const hashedPassword = 'a0ed98b4a2cfb88a2533757f7201e454'; 
 
-        imageInput.addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const img = document.createElement('img');
-                img.src = URL.createObjectURL(file);
-                img.onload = () => URL.revokeObjectURL(img.src);  // Release memory
-                imageContainer.innerHTML = '';  // Clear previous images
-                imageContainer.appendChild(img);
+        let adminMode = false;
+
+        function displayPosts() {
+            postGallery.innerHTML = '';
+            storedPosts.forEach((postData, index) => {
+                const postContainer = document.createElement('div');
+                postContainer.classList.add('post-container');
+
+                const postTitle = document.createElement('div');
+                postTitle.classList.add('post-title');
+                postTitle.innerText = postData.title;
+                
+                const postText = document.createElement('div');
+                postText.classList.add('post-text');
+                postText.innerText = postData.text;
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.innerText = 'Delete';
+                deleteBtn.classList.add('delete-btn');
+                deleteBtn.onclick = () => {
+                    if (adminMode) {
+                        storedPosts.splice(index, 1);
+                        localStorage.setItem('posts', JSON.stringify(storedPosts));
+                        displayPosts();
+                    } else {
+                        alert('You need admin privileges to delete.');
+                    }
+                };
+
+                postContainer.appendChild(postTitle);
+                postContainer.appendChild(postText);
+                if (adminMode) {
+                    postContainer.appendChild(deleteBtn);
+                }
+                postGallery.appendChild(postContainer);
+            });
+        }
+
+        displayPosts();
+
+        addPostBtn.addEventListener('click', function() {
+            const title = titleInput.value.trim();
+            const text = textInput.value.trim();
+            
+            if (title && text) {
+                const newPost = { title, text };
+                storedPosts.push(newPost);
+                localStorage.setItem('posts', JSON.stringify(storedPosts));
+                displayPosts();
+            } else {
+                alert('Please enter both title and text.');
+            }
+        });
+
+        verifyBtn.addEventListener('click', () => {
+            const inputPassword = passwordInput.value;
+            const inputHashed = CryptoJS.MD5(inputPassword).toString();
+            
+            if (inputHashed === hashedPassword) {
+                alert('Admin mode enabled.');
+                adminMode = true;
+                displayPosts();
+            } else {
+                alert('Incorrect password.');
+                adminMode = false;
             }
         });
     </script>
