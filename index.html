@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Galeria Cetis58</title>
+    <title>Galería de Textos con Privilegios de Admin</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -61,85 +61,113 @@
 
     <div class="gallery" id="postGallery"></div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script>
-        const titleInput = document.getElementById('titleInput');
-        const textInput = document.getElementById('textInput');
-        const postGallery = document.getElementById('postGallery');
-        const passwordInput = document.getElementById('passwordInput');
-        const verifyBtn = document.getElementById('verifyBtn');
-        const addPostBtn = document.getElementById('addPostBtn');
-        
-        const storedPosts = JSON.parse(localStorage.getItem('posts')) || [];
-        const hashedPassword = '4be365797a14c860e0fdb46398a299ac'; 
+    <script type="module">
+      // Import the functions you need from the SDKs
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+      import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+      import CryptoJS from "https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js";
+      
+      // Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyCjVxYOmna_tyxGtbIKYS_wpYQJ1Vg6ws0",
+        authDomain: "galeria-cetis58.firebaseapp.com",
+        projectId: "galeria-cetis58",
+        storageBucket: "galeria-cetis58.appspot.com",
+        messagingSenderId: "967278159529",
+        appId: "1:967278159529:web:1265be4da5bb9d7fa96bb8",
+        measurementId: "G-VGQ3N6WG97"
+      };
 
-        let adminMode = false;
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
 
-        function displayPosts() {
-            postGallery.innerHTML = '';
-            storedPosts.forEach((postData, index) => {
-                const postContainer = document.createElement('div');
-                postContainer.classList.add('post-container');
+      // Variables
+      const titleInput = document.getElementById('titleInput');
+      const textInput = document.getElementById('textInput');
+      const postGallery = document.getElementById('postGallery');
+      const passwordInput = document.getElementById('passwordInput');
+      const verifyBtn = document.getElementById('verifyBtn');
+      const addPostBtn = document.getElementById('addPostBtn');
+      const hashedPassword = '4be365797a14c860e0fdb46398a299ac'; // Hashed password (MD5 for 'Cetis58')
+      let adminMode = false;
 
-                const postTitle = document.createElement('div');
-                postTitle.classList.add('post-title');
-                postTitle.innerText = postData.title;
-                
-                const postText = document.createElement('div');
-                postText.classList.add('post-text');
-                postText.innerText = postData.text;
+      // Fetch and display posts
+      async function fetchPosts() {
+        const querySnapshot = await getDocs(collection(db, "posts"));
+        postGallery.innerHTML = ''; // Clear previous posts
 
-                const deleteBtn = document.createElement('button');
-                deleteBtn.innerText = 'Eliminar';
-                deleteBtn.classList.add('delete-btn');
-                deleteBtn.onclick = () => {
-                    if (adminMode) {
-                        storedPosts.splice(index, 1);
-                        localStorage.setItem('posts', JSON.stringify(storedPosts));
-                        displayPosts();
-                    } else {
-                        alert('Necesitas privilegios de administrador para eliminar.');
-                    }
-                };
+        querySnapshot.forEach((doc) => {
+          const post = doc.data();
+          displayPost(doc.id, post.title, post.text);
+        });
+      }
 
-                postContainer.appendChild(postTitle);
-                postContainer.appendChild(postText);
-                if (adminMode) {
-                    postContainer.appendChild(deleteBtn);
-                }
-                postGallery.appendChild(postContainer);
-            });
+      // Display post in the gallery
+      function displayPost(id, title, text) {
+        const postContainer = document.createElement('div');
+        postContainer.classList.add('post-container');
+
+        const postTitle = document.createElement('div');
+        postTitle.classList.add('post-title');
+        postTitle.innerText = title;
+
+        const postText = document.createElement('div');
+        postText.classList.add('post-text');
+        postText.innerText = text;
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerText = 'Eliminar';
+        deleteBtn.classList.add('delete-btn');
+        deleteBtn.onclick = async () => {
+          if (adminMode) {
+            await deleteDoc(doc(db, "posts", id));
+            fetchPosts(); // Refresh posts after deletion
+          } else {
+            alert('Necesitas privilegios de administrador para eliminar.');
+          }
+        };
+
+        postContainer.appendChild(postTitle);
+        postContainer.appendChild(postText);
+        if (adminMode) {
+          postContainer.appendChild(deleteBtn);
         }
+        postGallery.appendChild(postContainer);
+      }
 
-        displayPosts();
+      // Add new post
+      addPostBtn.addEventListener('click', async function() {
+        const title = titleInput.value.trim();
+        const text = textInput.value.trim();
+        
+        if (title && text) {
+          await addDoc(collection(db, "posts"), { title, text });
+          fetchPosts(); // Refresh posts
+        } else {
+          alert('Por favor, ingresa tanto el título como el texto.');
+        }
+      });
 
-        addPostBtn.addEventListener('click', function() {
-            const title = titleInput.value.trim();
-            const text = textInput.value.trim();
-            
-            if (title && text) {
-                const newPost = { title, text };
-                storedPosts.push(newPost);
-                localStorage.setItem('posts', JSON.stringify(storedPosts));
-                displayPosts();
-            } else {
-                alert('Por favor, ingresa tanto el título como el texto.');
-            }
-        });
+      // Verify admin password
+      verifyBtn.addEventListener('click', () => {
+        const inputPassword = passwordInput.value;
+        const inputHashed = CryptoJS.MD5(inputPassword).toString();
+        
+        if (inputHashed === hashedPassword) {
+          alert('Modo administrador activado.');
+          adminMode = true;
+          fetchPosts(); // Refresh the posts to show delete buttons
+        } else {
+          alert('Contraseña incorrecta.');
+          adminMode = false;
+        }
+      });
 
-        verifyBtn.addEventListener('click', () => {
-            const inputPassword = passwordInput.value;
-            const inputHashed = CryptoJS.MD5(inputPassword).toString();
-            
-            if (inputHashed === hashedPassword) {
-                alert('Modo administrador activado.');
-                adminMode = true;
-                displayPosts();
-            } else {
-                alert('Contraseña incorrecta.');
-                adminMode = false;
-            }
-        });
+      // Initial load
+      document.addEventListener("DOMContentLoaded", fetchPosts);
+
     </script>
+
 </body>
 </html>
