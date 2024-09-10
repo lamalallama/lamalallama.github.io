@@ -4,6 +4,11 @@
 <!-- 10/9/2024 -->
 <!-- Servidor Dinamico: Firebase - Google -->
 <!-- Servidor Estatico: Github -->
+ <!-- Agregar Funciones: 
+    Hacer 'pin' a las publicaciones solo con admin, estas estaran hasta arriba sin importar que.
+    Agregar soporte a hipertexto.
+    Hacer que los url se puedan incrustar en cualquier texto.
+  -->
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -112,7 +117,7 @@
 <body>
   <div class="container">
     <div id="userPanel">
-      <button id="showLoginBtn">Iniciar sesión</button>
+      <button id="showLoginBtn">Iniciar sesión</button>  
       <div class="login-form">
         <input type="text" id="usernameInput" placeholder="Nombre de usuario">
         <input type="password" id="userPassword" placeholder="Contraseña">
@@ -121,6 +126,9 @@
     </div>
     
     <h1>Galería de Publicaciones</h1>
+    <a href="https://lamalallama.github.io/polls.html">
+      <button>Hacer Una Votación</button>
+    </a>
 
     <div class="input-container">
       <input type="text" id="titleInput" placeholder="Título">
