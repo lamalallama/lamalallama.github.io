@@ -1,97 +1,107 @@
 <!DOCTYPE html>
 <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Galería de Textos con Privilegios de Admin</title>
-        <link rel="stylesheet" href="styles.css">
-    </head>
-    <body>
-        <h1>Galería de Textos</h1>
-        <input type="text" id="titleInput" placeholder="Ingresa el título">
-        <br><br>
-        <textarea id="textInput" placeholder="Ingresa el texto" rows="4" cols="50"></textarea>
-        <br><br>
-        <button id="addPostBtn">Añadir Publicación</button>
-        <br><br>
-        <label for="passwordInput">Ingresa Contraseña (para editar/eliminar):</label>
-        <input type="password" id="passwordInput">
-        <button id="verifyBtn">Verificar</button>
-        <div class="gallery" id="postGallery"></div>
-        <script type="module">
-            // Import the functions you need from the SDKs you need
-            import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-            import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
-            
-            // Your web app's Firebase configuration
-            const firebaseConfig = {
-              apiKey: "AIzaSyCjVxYOmna_tyxGtbIKYS_wpYQJ1Vg6ws0",
-              authDomain: "galeria-cetis58.firebaseapp.com",
-              projectId: "galeria-cetis58",
-              storageBucket: "galeria-cetis58.appspot.com",
-              messagingSenderId: "967278159529",
-              appId: "1:967278159529:web:1265be4da5bb9d7fa96bb8",
-              measurementId: "G-VGQ3N6WG97",
-              databaseURL: "https://galeria-cetis58-default-rtdb.firebaseio.com/"
-            };
-            
-            // Initialize Firebase
-            const app = initializeApp(firebaseConfig);
-            const db = getDatabase(app);
-            
-            // Reference to the "posts" node in Realtime Database
-            const postsRef = ref(db, 'posts');
-            
-            // Add a new post
-            const addPostBtn = document.getElementById('addPostBtn');
-            addPostBtn.addEventListener('click', function() {
-              const title = document.getElementById('titleInput').value.trim();
-              const text = document.getElementById('textInput').value.trim();
-            
-              if (title && text) {
-                push(postsRef, {
-                  title: title,
-                  text: text
-                });
-                document.getElementById('titleInput').value = '';
-                document.getElementById('textInput').value = '';
-              } else {
-                alert('Por favor, ingresa tanto el título como el texto.');
-              }
-            });
-            
-            // Display all posts
-            const postList = document.getElementById('postList');
-            onValue(postsRef, (snapshot) => {
-              postList.innerHTML = '';
-              snapshot.forEach((childSnapshot) => {
-                const post = childSnapshot.val();
-                const postId = childSnapshot.key;
-                const postElement = document.createElement('div');
-                postElement.innerHTML = `
-                  <h3>${post.title}</h3>
-                  <p>${post.text}</p>
-                  <button class="deleteBtn" data-id="${postId}">Eliminar</button>
-                `;
-                postList.appendChild(postElement);
-            
-                // Add delete functionality
-                const deleteBtn = postElement.querySelector('.deleteBtn');
-                deleteBtn.addEventListener('click', function() {
-                  const enteredPassword = prompt('Introduce la contraseña para eliminar la publicación:');
-                  if (md5(enteredPassword) === '4be365797a14c860e0fdb46398a299ac') {
-                    remove(ref(db, `posts/${postId}`));
-                  } else {
-                    alert('Contraseña incorrecta.');
-                  }
-                });
-              });
-            });
-            
-            // MD5 hash function
-            function md5(string) {
-              return CryptoJS.MD5(string).toString();
-            }
-        </script>
-    </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Galería de Publicaciones</title>
+</head>
+<body>
+  <h1>Galería de Publicaciones</h1>
+
+  <div>
+    <input type="text" id="titleInput" placeholder="Título">
+    <textarea id="textInput" placeholder="Texto"></textarea>
+    <button id="addPostBtn">Añadir Publicación</button>
+  </div>
+
+  <div id="postList"></div>
+
+  <!-- Import CryptoJS for MD5 hashing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+  <!-- Firebase Setup -->
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+    import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCjVxYOmna_tyxGtbIKYS_wpYQJ1Vg6ws0",
+      authDomain: "galeria-cetis58.firebaseapp.com",
+      projectId: "galeria-cetis58",
+      storageBucket: "galeria-cetis58.appspot.com",
+      messagingSenderId: "967278159529",
+      appId: "1:967278159529:web:1265be4da5bb9d7fa96bb8",
+      measurementId: "G-VGQ3N6WG97",
+      databaseURL: "https://galeria-cetis58-default-rtdb.firebaseio.com/"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    // Reference to the "posts" node in the Realtime Database
+    const postsRef = ref(db, 'posts');
+
+    // Add a new post
+    const addPostBtn = document.getElementById('addPostBtn');
+    addPostBtn.addEventListener('click', function() {
+      const title = document.getElementById('titleInput').value.trim();
+      const text = document.getElementById('textInput').value.trim();
+
+      if (title && text) {
+        // Push new post to Realtime Database
+        push(postsRef, {
+          title: title,
+          text: text
+        });
+
+        // Clear input fields
+        document.getElementById('titleInput').value = '';
+        document.getElementById('textInput').value = '';
+      } else {
+        alert('Por favor, ingresa tanto el título como el texto.');
+      }
+    });
+
+    // Display all posts
+    const postList = document.getElementById('postList');
+    onValue(postsRef, (snapshot) => {
+      postList.innerHTML = ''; // Clear the list before appending new data
+      snapshot.forEach((childSnapshot) => {
+        const post = childSnapshot.val();
+        const postId = childSnapshot.key;
+
+        // Create a new post element
+        const postElement = document.createElement('div');
+        postElement.innerHTML = `
+          <h3>${post.title}</h3>
+          <p>${post.text}</p>
+          <button class="deleteBtn" data-id="${postId}">Eliminar</button>
+        `;
+
+        // Append the post to the list
+        postList.appendChild(postElement);
+
+        // Add delete functionality
+        const deleteBtn = postElement.querySelector('.deleteBtn');
+        deleteBtn.addEventListener('click', function() {
+          const enteredPassword = prompt('Introduce la contraseña para eliminar la publicación:');
+          if (md5(enteredPassword) === '4be365797a14c860e0fdb46398a299ac') {
+            // Remove post from Realtime Database
+            remove(ref(db, `posts/${postId}`));
+          } else {
+            alert('Contraseña incorrecta.');
+          }
+        });
+      });
+    });
+
+    // MD5 hash function
+    function md5(string) {
+      return CryptoJS.MD5(string).toString();
+    }
+  </script>
+</body>
 </html>
