@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EL CHAT</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #222;
+        color: #fff;
+        text-align: center;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: auto;
+        padding: 20px;
+      }
+      .button {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #4caf50;
+        color: #fff;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 10px;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+      }
+      .button:hover {
+        background-color: #45a049;
+      }
+      .chat-code {
+        font-size: 20px;
+        background-color: #333;
+        color: #fff;
+        padding: 10px;
+        border-radius: 5px;
+        margin: 20px 0;
+      }
+      .chat-screen {
+        background-color: #333;
+        padding: 20px;
+        min-height: 300px;
+        border-radius: 10px;
+        margin-top: 20px;
+        text-align: left;
+        overflow-y: scroll;
+        max-height: 400px;
+      }
+      .message {
+        background-color: #444;
+        color: #fff;
+        padding: 10px;
+        margin: 5px 0;
+        border-radius: 5px;
+      }
+      .input-box {
+        width: calc(100% - 20px);
+        padding: 10px;
+        margin: 10px 0;
+        background-color: #444;
+        border: none;
+        color: #fff;
+        border-radius: 5px;
+        font-size: 16px;
+      }
+      .arrow-back {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        cursor: pointer;
+      }
+      .download-button {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: #fff;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 10px;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+      }
+      .download-button:hover {
+        background-color: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>EL CHAT</h1>
+      <div id="main-menu">
+        <a href="#" class="button" onclick="createChat()">Create Chat</a>
+        <a href="#" class="button" onclick="joinChat()">Join Chat</a>
+      </div>
+
+      <!-- Create Chat Screen -->
+      <div id="create-chat" style="display: none">
+        <a href="#" class="arrow-back" onclick="backToMainMenu()"
+          >&larr; Back</a
+        >
+        <h2>Create Chat</h2>
+        <div class="chat-code" id="chat-code-display"></div>
+        <div class="chat-screen" id="chat-screen"></div>
+        <input
+          type="text"
+          id="message-input"
+          class="input-box"
+          placeholder="Type your message..."
+        />
+        <button onclick="sendMessage()" class="button">Send</button>
+        <button onclick="downloadChat()" class="download-button">
+          Download Chat
+        </button>
+      </div>
+
+      <!-- Join Chat Screen -->
+      <div id="join-chat" style="display: none">
+        <a href="#" class="arrow-back" onclick="backToMainMenu()"
+          >&larr; Back</a
+        >
+        <h2>Join Chat</h2>
+        <input
+          type="text"
+          id="chat-code-input"
+          class="input-box"
+          placeholder="Enter chat code..."
+        />
+        <button onclick="enterChat()" class="button">Enter Chat</button>
+      </div>
+    </div>
+
+    <!-- Firebase Scripts -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+      import {
+        getDatabase,
+        ref,
+        push,
+        set,
+        onValue,
+        update,
+        remove,
+      } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyBzxpoiDIzCXRX9L2iRuQ9KSPai6stkXNI",
+        authDomain: "anon-msgs.firebaseapp.com",
+        projectId: "anon-msgs",
+        storageBucket: "anon-msgs.appspot.com",
+        messagingSenderId: "826610652586",
+        appId: "1:826610652586:web:ee9a2b94322936ab6407d3",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const database = getDatabase(app);
+
+      // Global Functions
+      window.createChat = function createChat() {
+        document.getElementById("main-menu").style.display = "none";
+        document.getElementById("create-chat").style.display = "block";
+        const chatCode = generateChatCode();
+        document.getElementById(
+          "chat-code-display"
+        ).innerText = `Chat Code: ${chatCode}`;
+
+        const chatRef = ref(database, "chats/" + chatCode);
+        const chatScreen = document.getElementById("chat-screen");
+        onValue(chatRef, (snapshot) => {
+          const messages = snapshot.val();
+          chatScreen.innerHTML = ""; // Clear screen before re-rendering messages
+          if (messages) {
+            for (const messageKey in messages) {
+              const message = messages[messageKey].message;
+              if (message) {
+                const messageElement = document.createElement("div");
+                messageElement.innerText = message;
+                messageElement.classList.add("message");
+                chatScreen.appendChild(messageElement);
+              }
+            }
+            chatScreen.scrollTop = chatScreen.scrollHeight; // Scroll to bottom
+          }
+        });
+
+        // Set initial activity time
+        update(chatRef, { lastActive: new Date().toISOString() });
+      };
+
+      window.joinChat = function joinChat() {
+        document.getElementById("main-menu").style.display = "none";
+        document.getElementById("join-chat").style.display = "block";
+      };
+
+      window.backToMainMenu = function backToMainMenu() {
+        document.getElementById("create-chat").style.display = "none";
+        document.getElementById("join-chat").style.display = "none";
+        document.getElementById("main-menu").style.display = "block";
+      };
+
+      function generateChatCode() {
+        const characters =
+          "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        let result = "";
+        for (let i = 0; i < 6; i++) {
+          result += characters.charAt(
+            Math.floor(Math.random() * characters.length)
+          );
+        }
+        return result;
+      }
+
+      window.sendMessage = function sendMessage() {
+        const messageInput = document.getElementById("message-input");
+        const message = messageInput.value;
+        if (message.trim() !== "") {
+          const chatCode = document
+            .getElementById("chat-code-display")
+            .innerText.split(" ")[2];
+          const chatRef = ref(database, "chats/" + chatCode);
+          push(chatRef, {
+            message: message,
+          });
+          messageInput.value = ""; // Clear input
+
+          // Update last activity time
+          update(chatRef, { lastActive: new Date().toISOString() });
+        }
+      };
+
+      window.enterChat = function enterChat() {
+        const chatCodeInput = document.getElementById("chat-code-input");
+        const chatCode = chatCodeInput.value.trim();
+        if (chatCode !== "") {
+          document.getElementById("join-chat").style.display = "none";
+          document.getElementById("create-chat").style.display = "block";
+          document.getElementById(
+            "chat-code-display"
+          ).innerText = `Chat Code: ${chatCode}`;
+
+          const chatRef = ref(database, "chats/" + chatCode);
+          const chatScreen = document.getElementById("chat-screen");
+          onValue(chatRef, (snapshot) => {
+            const messages = snapshot.val();
+            chatScreen.innerHTML = ""; // Clear screen before re-rendering messages
+            if (messages) {
+              for (const messageKey in messages) {
+                const message = messages[messageKey].message;
+                if (message) {
+                  const messageElement = document.createElement("div");
+                  messageElement.innerText = message;
+                  messageElement.classList.add("message");
+                  chatScreen.appendChild(messageElement);
+                }
+              }
+              chatScreen.scrollTop = chatScreen.scrollHeight; // Scroll to bottom
+            }
+          });
+        }
+      };
+
+      window.downloadChat = function downloadChat() {
+        const chatCode = document
+          .getElementById("chat-code-display")
+          .innerText.split(" ")[2];
+        const chatRef = ref(database, "chats/" + chatCode);
+
+        onValue(chatRef, (snapshot) => {
+          const messages = snapshot.val();
+          let textContent = "";
+
+          if (messages) {
+            for (const messageKey in messages) {
+              textContent += messages[messageKey].message + "\n";
+            }
+          }
+
+          // Create a blob and download it as a TXT file
+          const blob = new Blob([textContent], {
+            type: "text/plain;charset=utf-8",
+          });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `chat_${chatCode}.txt`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url); // Clean up
+        });
+      };
+
+      function checkChatInactivity() {
+        const chatRef = ref(database, "chats");
+        onValue(chatRef, (snapshot) => {
+          const chats = snapshot.val();
+          const now = new Date().toISOString();
+
+          if (chats) {
+            for (const chatCode in chats) {
+              const lastActive = new Date(chats[chatCode].lastActive);
+              const inactivityPeriod = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
+              if (new Date() - lastActive > inactivityPeriod) {
+                remove(ref(database, "chats/" + chatCode));
+              }
+            }
+          }
+        });
+      }
+
+      // Run inactivity check every hour
+      setInterval(checkChatInactivity, 60 * 60 * 1000); // 1 hour in milliseconds
+      checkChatInactivity(); // Initial check
+    </script>
+  </body>
+</html>
