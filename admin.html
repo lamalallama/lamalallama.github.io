@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #1e1e1e;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 100%;
+        }
+        h1 {
+            color: #ffffff;
+            margin-bottom: 1rem;
+        }
+        .input-group {
+            margin-bottom: 1rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #b0b0b0;
+        }
+        input, select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #333;
+            border-radius: 4px;
+            font-size: 1rem;
+            background-color: #2a2a2a;
+            color: #e0e0e0;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .error {
+            color: #ff6b6b;
+            margin-top: 1rem;
+        }
+        .success {
+            color: #4CAF50;
+            margin-top: 1rem;
+        }
+        #chatDeletionForm {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Admin</h1>
+        <div id="passwordForm">
+            <div class="input-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" required>
+            </div>
+            <button id="submitPassword">Submit</button>
+        </div>
+        <div id="chatDeletionForm">
+            <div class="input-group">
+                <label for="chatSelect">Select Chat to Delete:</label>
+                <select id="chatSelect">
+                    <!-- Chats will be populated here -->
+                </select>
+            </div>
+            <button id="deleteChat">Delete Chat</button>
+        </div>
+        <div id="messageContainer"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getDatabase, ref, remove, get, child } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBzxpoiDIzCXRX9L2iRuQ9KSPai6stkXNI",
+            authDomain: "anon-msgs.firebaseapp.com",
+            databaseURL: "https://anon-msgs-default-rtdb.firebaseio.com",
+            projectId: "anon-msgs",
+            storageBucket: "anon-msgs.appspot.com",
+            messagingSenderId: "826610652586",
+            appId: "1:826610652586:web:ee9a2b94322936ab6407d3"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        const correctHash = "ddcf471c577bbe34e0fed9067354eca6fe234e6602add7e090b456e43f9f6fd2";
+        const maxAttempts = 5;
+        let failedAttempts = 0;
+
+        function showMessage(message, isError = false) {
+            const messageContainer = document.getElementById('messageContainer');
+            messageContainer.textContent = message;
+            messageContainer.className = isError ? 'error' : 'success';
+        }
+
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        async function verifyPassword() {
+            const passwordInput = document.getElementById('password').value;
+            const hash = await sha256(passwordInput);
+
+            if (failedAttempts >= maxAttempts) {
+                showMessage("Too many failed attempts. Access denied.", true);
+                return;
+            }
+
+            if (hash === correctHash) {
+                showMessage("Access granted.");
+                document.getElementById('passwordForm').style.display = 'none';
+                document.getElementById('chatDeletionForm').style.display = 'block';
+                loadChats();  // Load chats when password is correct
+                failedAttempts = 0;
+            } else {
+                failedAttempts++;
+                showMessage(`Incorrect password. Attempts remaining: ${maxAttempts - failedAttempts}`, true);
+            }
+        }
+
+        async function loadChats() {
+            const chatSelect = document.getElementById('chatSelect');
+            const dbRef = ref(getDatabase());
+
+            try {
+                const snapshot = await get(child(dbRef, `chats`));
+                if (snapshot.exists()) {
+                    const chats = snapshot.val();
+                    chatSelect.innerHTML = ""; // Clear the dropdown
+                    Object.keys(chats).forEach(chatCode => {
+                        const option = document.createElement('option');
+                        option.value = chatCode;
+                        option.textContent = chatCode;
+                        chatSelect.appendChild(option);
+                    });
+                } else {
+                    showMessage("No chats available.", true);
+                }
+            } catch (error) {
+                showMessage(`Error loading chats: ${error.message}`, true);
+            }
+        }
+
+        async function deleteChat() {
+            const chatCode = document.getElementById('chatSelect').value;
+            if (!chatCode) {
+                showMessage("Please select a valid chat code.", true);
+                return;
+            }
+
+            try {
+                const chatRef = ref(database, `chats/${chatCode}`);
+                await remove(chatRef);
+                showMessage("Chat deleted successfully.");
+                loadChats();  // Refresh the chat list after deletion
+            } catch (error) {
+                showMessage(`Error deleting chat: ${error.message}`, true);
+            }
+        }
+
+        document.getElementById('submitPassword').addEventListener('click', verifyPassword);
+        document.getElementById('deleteChat').addEventListener('click', deleteChat);
+
+        document.getElementById('password').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                verifyPassword();
+            }
+        });
+
+        document.getElementById('chatSelect').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                deleteChat();
+            }
+        });
+    </script>
+</body>
+</html>
