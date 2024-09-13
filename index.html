@@ -114,6 +114,7 @@
           id="message-input"
           class="input-box"
           placeholder="Type your message..."
+          onkeydown="if(event.key === 'Enter') sendMessage()"
         />
         <button onclick="sendMessage()" class="button">Send</button>
         <button onclick="downloadChat()" class="download-button">
@@ -132,6 +133,7 @@
           id="chat-code-input"
           class="input-box"
           placeholder="Enter chat code..."
+          onkeydown="if(event.key === 'Enter') enterChat()"
         />
         <button onclick="enterChat()" class="button">Enter Chat</button>
       </div>
@@ -161,6 +163,8 @@
 
       const app = initializeApp(firebaseConfig);
       const database = getDatabase(app);
+
+      let userNumber = Math.floor(Math.random() * 1000); // Temporary user number
 
       // Global Functions
       window.createChat = function createChat() {
@@ -226,7 +230,7 @@
             .innerText.split(" ")[2];
           const chatRef = ref(database, "chats/" + chatCode);
           push(chatRef, {
-            message: message,
+            message: `[${userNumber}] ${message}`, // Include temporary user number
           });
           messageInput.value = ""; // Clear input
 
@@ -263,51 +267,50 @@
               chatScreen.scrollTop = chatScreen.scrollHeight; // Scroll to bottom
             }
           });
+
+          // Update last activity time
+          update(chatRef, { lastActive: new Date().toISOString() });
         }
       };
 
+      // Download chat as a text file
       window.downloadChat = function downloadChat() {
         const chatCode = document
           .getElementById("chat-code-display")
           .innerText.split(" ")[2];
         const chatRef = ref(database, "chats/" + chatCode);
-
         onValue(chatRef, (snapshot) => {
           const messages = snapshot.val();
-          let textContent = "";
-
           if (messages) {
+            let chatLog = "";
             for (const messageKey in messages) {
-              textContent += messages[messageKey].message + "\n";
+              const message = messages[messageKey].message;
+              if (message) {
+                chatLog += `${message}\n`;
+              }
             }
-          }
 
-          // Create a blob and download it as a TXT file
-          const blob = new Blob([textContent], {
-            type: "text/plain;charset=utf-8",
-          });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `chat_${chatCode}.txt`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url); // Clean up
+            const blob = new Blob([chatLog], { type: "text/plain" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `chat_${chatCode}.txt`;
+            link.click();
+          }
         });
       };
 
-      function checkChatInactivity() {
-        const chatRef = ref(database, "chats");
-        onValue(chatRef, (snapshot) => {
+      // Auto-delete chats after 12 hours of inactivity
+      function checkChatActivity() {
+        const chatsRef = ref(database, "chats");
+        onValue(chatsRef, (snapshot) => {
           const chats = snapshot.val();
-          const now = new Date().toISOString();
-
           if (chats) {
             for (const chatCode in chats) {
-              const lastActive = new Date(chats[chatCode].lastActive);
-              const inactivityPeriod = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
-              if (new Date() - lastActive > inactivityPeriod) {
+              const chat = chats[chatCode];
+              const lastActive = new Date(chat.lastActive);
+              const now = new Date();
+              const hoursInactive = (now - lastActive) / (1000 * 60 * 60); // Difference in hours
+              if (hoursInactive >= 12) {
                 remove(ref(database, "chats/" + chatCode));
               }
             }
@@ -315,12 +318,14 @@
         });
       }
 
-      // Run inactivity check every hour
-      setInterval(checkChatInactivity, 60 * 60 * 1000); // 1 hour in milliseconds
-      checkChatInactivity(); // Initial check
+      // Check chat activity periodically (e.g., every 10 minutes)
+      setInterval(checkChatActivity, 10 * 60 * 1000);
     </script>
-    <form action="https://lamalallama.github.io/tabla.html">
-        <input type="submit" value="Ir a Tablas" />
-    </form>
+    <button
+      onclick="window.location.href='https://lamalallama.github.io/tabla.html'"
+      class="button"
+    >
+      Ir a Tabla
+    </button>
   </body>
 </html>
