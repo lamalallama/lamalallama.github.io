@@ -139,6 +139,7 @@
       </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <!-- Firebase Scripts -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
@@ -166,7 +167,18 @@
 
       let userNumber = Math.floor(Math.random() * 1000); // Temporary user number
 
-      // Global Functions
+      // Encryption function using AES
+      function encryptMessage(message, key) {
+        return CryptoJS.AES.encrypt(message, key).toString();
+      }
+
+      // Decryption function using AES
+      function decryptMessage(encryptedMessage, key) {
+        const bytes = CryptoJS.AES.decrypt(encryptedMessage, key);
+        return bytes.toString(CryptoJS.enc.Utf8);
+      }
+
+      // Function to create a new chat
       window.createChat = function createChat() {
         document.getElementById("main-menu").style.display = "none";
         document.getElementById("create-chat").style.display = "block";
@@ -182,10 +194,14 @@
           chatScreen.innerHTML = ""; // Clear screen before re-rendering messages
           if (messages) {
             for (const messageKey in messages) {
-              const message = messages[messageKey].message;
-              if (message) {
+              const encryptedMessage = messages[messageKey].message;
+              if (encryptedMessage) {
+                const decryptedMessage = decryptMessage(
+                  encryptedMessage,
+                  chatCode
+                );
                 const messageElement = document.createElement("div");
-                messageElement.innerText = message;
+                messageElement.innerText = decryptedMessage;
                 messageElement.classList.add("message");
                 chatScreen.appendChild(messageElement);
               }
@@ -198,29 +214,7 @@
         update(chatRef, { lastActive: new Date().toISOString() });
       };
 
-      window.joinChat = function joinChat() {
-        document.getElementById("main-menu").style.display = "none";
-        document.getElementById("join-chat").style.display = "block";
-      };
-
-      window.backToMainMenu = function backToMainMenu() {
-        document.getElementById("create-chat").style.display = "none";
-        document.getElementById("join-chat").style.display = "none";
-        document.getElementById("main-menu").style.display = "block";
-      };
-
-      function generateChatCode() {
-        const characters =
-          "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        let result = "";
-        for (let i = 0; i < 6; i++) {
-          result += characters.charAt(
-            Math.floor(Math.random() * characters.length)
-          );
-        }
-        return result;
-      }
-
+      // Function to send a message
       window.sendMessage = function sendMessage() {
         const messageInput = document.getElementById("message-input");
         const message = messageInput.value;
@@ -228,9 +222,15 @@
           const chatCode = document
             .getElementById("chat-code-display")
             .innerText.split(" ")[2];
+
+          const encryptedMessage = encryptMessage(
+            `[${userNumber}] ${message}`,
+            chatCode
+          );
+
           const chatRef = ref(database, "chats/" + chatCode);
           push(chatRef, {
-            message: `[${userNumber}] ${message}`, // Include temporary user number
+            message: encryptedMessage, // Send encrypted message
           });
           messageInput.value = ""; // Clear input
 
@@ -239,6 +239,13 @@
         }
       };
 
+      // Function to join an existing chat
+      window.joinChat = function joinChat() {
+        document.getElementById("main-menu").style.display = "none";
+        document.getElementById("join-chat").style.display = "block";
+      };
+
+      // Function to enter a chat using chat code
       window.enterChat = function enterChat() {
         const chatCodeInput = document.getElementById("chat-code-input");
         const chatCode = chatCodeInput.value.trim();
@@ -256,10 +263,14 @@
             chatScreen.innerHTML = ""; // Clear screen before re-rendering messages
             if (messages) {
               for (const messageKey in messages) {
-                const message = messages[messageKey].message;
-                if (message) {
+                const encryptedMessage = messages[messageKey].message;
+                if (encryptedMessage) {
+                  const decryptedMessage = decryptMessage(
+                    encryptedMessage,
+                    chatCode
+                  );
                   const messageElement = document.createElement("div");
-                  messageElement.innerText = message;
+                  messageElement.innerText = decryptedMessage;
                   messageElement.classList.add("message");
                   chatScreen.appendChild(messageElement);
                 }
@@ -268,58 +279,39 @@
             }
           });
 
-          // Update last activity time
+          // Set initial activity time
           update(chatRef, { lastActive: new Date().toISOString() });
         }
       };
 
-      // Download chat as a text file
+      // Function to go back to main menu
+      window.backToMainMenu = function backToMainMenu() {
+        document.getElementById("create-chat").style.display = "none";
+        document.getElementById("join-chat").style.display = "none";
+        document.getElementById("main-menu").style.display = "block";
+      };
+
+      // Function to generate a random chat code
+      function generateChatCode() {
+        return Math.random().toString(36).substr(2, 8);
+      }
+
+      // Function to download chat as TXT file
       window.downloadChat = function downloadChat() {
+        const chatScreen = document.getElementById("chat-screen");
         const chatCode = document
           .getElementById("chat-code-display")
           .innerText.split(" ")[2];
-        const chatRef = ref(database, "chats/" + chatCode);
-        onValue(chatRef, (snapshot) => {
-          const messages = snapshot.val();
-          if (messages) {
-            let chatLog = "";
-            for (const messageKey in messages) {
-              const message = messages[messageKey].message;
-              if (message) {
-                chatLog += `${message}\n`;
-              }
-            }
+        const chatContent = chatScreen.innerText;
 
-            const blob = new Blob([chatLog], { type: "text/plain" });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `chat_${chatCode}.txt`;
-            link.click();
-          }
+        const blob = new Blob([chatContent], {
+          type: "text/plain;charset=utf-8",
         });
+        const downloadLink = document.createElement("a");
+        downloadLink.href = URL.createObjectURL(blob);
+        downloadLink.download = `chat_${chatCode}.txt`;
+        downloadLink.click();
       };
-
-      // Auto-delete chats after 12 hours of inactivity
-      function checkChatActivity() {
-        const chatsRef = ref(database, "chats");
-        onValue(chatsRef, (snapshot) => {
-          const chats = snapshot.val();
-          if (chats) {
-            for (const chatCode in chats) {
-              const chat = chats[chatCode];
-              const lastActive = new Date(chat.lastActive);
-              const now = new Date();
-              const hoursInactive = (now - lastActive) / (1000 * 60 * 60); // Difference in hours
-              if (hoursInactive >= 12) {
-                remove(ref(database, "chats/" + chatCode));
-              }
-            }
-          }
-        });
-      }
-
-      // Check chat activity periodically (e.g., every 10 minutes)
-      setInterval(checkChatActivity, 10 * 60 * 1000);
     </script>
     <button
       onclick="window.location.href='https://lamalallama.github.io/tabla.html'"
