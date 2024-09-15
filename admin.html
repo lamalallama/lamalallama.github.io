@@ -4,71 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Page</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #121212;
-            color: #e0e0e0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            background-color: #1e1e1e;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            max-width: 400px;
-            width: 100%;
-        }
-        h1 {
-            color: #ffffff;
-            margin-bottom: 1rem;
-        }
-        .input-group {
-            margin-bottom: 1rem;
-        }
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: #b0b0b0;
-        }
-        input, select {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #333;
-            border-radius: 4px;
-            font-size: 1rem;
-            background-color: #2a2a2a;
-            color: #e0e0e0;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 0.75rem 1rem;
-            font-size: 1rem;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        .error {
-            color: #ff6b6b;
-            margin-top: 1rem;
-        }
-        .success {
-            color: #4CAF50;
-            margin-top: 1rem;
-        }
-        #chatDeletionForm {
-            display: none;
-        }
-    </style>
+    <link rel="stylesheet" href="admin.css">
 </head>
 <body>
     <div class="container">
@@ -78,23 +14,26 @@
                 <label for="password">Password:</label>
                 <input type="password" id="password" required>
             </div>
-            <button id="submitPassword">Submit</button>
+            <button class="generalButton" id="submitPassword">Submit</button>
         </div>
-        <div id="chatDeletionForm">
+        <div id="chatDeletionForm" style="display: none;">
             <div class="input-group">
-                <label for="chatSelect">Select Chat to Delete:</label>
+                <label for="chatSelect">Select Chat:</label>
                 <select id="chatSelect">
                     <!-- Chats will be populated here -->
                 </select>
+                <button class="copyButton" class="copy" id="copyChat">Copy Chat Code</button>
             </div>
-            <button id="deleteChat">Delete Chat</button>
+            <button class="generalButton" id="refreshChats">Refresh Chats</button>
+            <button class="generalButton" id="deleteChat">Delete Chat</button>
+            <button class="generalButton" id="backButton">Back</button>
         </div>
         <div id="messageContainer"></div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getDatabase, ref, remove, get, child } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+        import { getDatabase, ref, get, set, update, remove } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBzxpoiDIzCXRX9L2iRuQ9KSPai6stkXNI",
@@ -109,16 +48,6 @@
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
 
-        const correctHash = "ddcf471c577bbe34e0fed9067354eca6fe234e6602add7e090b456e43f9f6fd2";
-        const maxAttempts = 5;
-        let failedAttempts = 0;
-
-        function showMessage(message, isError = false) {
-            const messageContainer = document.getElementById('messageContainer');
-            messageContainer.textContent = message;
-            messageContainer.className = isError ? 'error' : 'success';
-        }
-
         async function sha256(message) {
             const msgBuffer = new TextEncoder().encode(message);
             const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -126,33 +55,72 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
+        function showMessage(message, isError = false) {
+            const messageContainer = document.getElementById('messageContainer');
+            messageContainer.textContent = message;
+            messageContainer.className = isError ? 'error' : 'success';
+        }
+
+        async function initializeAdminData() {
+            const adminRef = ref(database, 'admin');
+            try {
+                const snapshot = await get(adminRef);
+                if (!snapshot.exists()) {
+                    // Initialize admin data with default values
+                    await set(adminRef, {
+                        hash: "your-default-hash",  // Replace with your hash
+                        failedAttempts: 0
+                    });
+                }
+            } catch (error) {
+                showMessage(`Error initializing admin data: ${error.message}`, true);
+            }
+        }
+
         async function verifyPassword() {
             const passwordInput = document.getElementById('password').value;
             const hash = await sha256(passwordInput);
+            
+            const adminRef = ref(database, 'admin');
 
-            if (failedAttempts >= maxAttempts) {
-                showMessage("Too many failed attempts. Access denied.", true);
-                return;
-            }
+            try {
+                await initializeAdminData(); // Ensure admin data exists
 
-            if (hash === correctHash) {
-                showMessage("Access granted.");
-                document.getElementById('passwordForm').style.display = 'none';
-                document.getElementById('chatDeletionForm').style.display = 'block';
-                loadChats();  // Load chats when password is correct
-                failedAttempts = 0;
-            } else {
-                failedAttempts++;
-                showMessage(`Incorrect password. Attempts remaining: ${maxAttempts - failedAttempts}`, true);
+                const snapshot = await get(adminRef);
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+
+                    if (data.hash === hash) {
+                        document.getElementById('passwordForm').style.display = 'none';
+                        document.getElementById('chatDeletionForm').style.display = 'block';
+                        showMessage("Access granted.");
+                        await update(adminRef, { failedAttempts: 0 });
+                        loadChats();
+                    } else {
+                        let attempts = data.failedAttempts || 0;
+                        attempts++;
+                        if (attempts >= 5) {
+                            showMessage("Too many failed attempts. Access denied.", true);
+                            await update(adminRef, { failedAttempts: attempts });
+                        } else {
+                            showMessage(`Incorrect password. Attempts remaining: ${5 - attempts}`, true);
+                            await update(adminRef, { failedAttempts: attempts });
+                        }
+                    }
+                } else {
+                    showMessage("Admin data not found.", true);
+                }
+            } catch (error) {
+                showMessage(`Error verifying password: ${error.message}`, true);
             }
         }
 
         async function loadChats() {
             const chatSelect = document.getElementById('chatSelect');
-            const dbRef = ref(getDatabase());
+            const dbRef = ref(database, 'chats');
 
             try {
-                const snapshot = await get(child(dbRef, `chats`));
+                const snapshot = await get(dbRef);
                 if (snapshot.exists()) {
                     const chats = snapshot.val();
                     chatSelect.innerHTML = ""; // Clear the dropdown
@@ -187,18 +155,32 @@
             }
         }
 
-        document.getElementById('submitPassword').addEventListener('click', verifyPassword);
-        document.getElementById('deleteChat').addEventListener('click', deleteChat);
+        function copyChatCode() {
+            const chatSelect = document.getElementById('chatSelect');
+            const chatCode = chatSelect.value;
+            if (!chatCode) {
+                showMessage("Please select a valid chat code to copy.", true);
+                return;
+            }
+            navigator.clipboard.writeText(chatCode).then(() => {
+                showMessage("Chat code copied to clipboard.");
+            }).catch(err => {
+                showMessage(`Failed to copy chat code: ${err.message}`, true);
+            });
+        }
 
+        function goBack() {
+            window.history.back();
+        }
+
+        document.getElementById('submitPassword').addEventListener('click', verifyPassword);
+        document.getElementById('refreshChats').addEventListener('click', loadChats);
+        document.getElementById('deleteChat').addEventListener('click', deleteChat);
+        document.getElementById('copyChat').addEventListener('click', copyChatCode);
+        document.getElementById('backButton').addEventListener('click', goBack);
         document.getElementById('password').addEventListener('keypress', function(event) {
             if (event.key === 'Enter') {
                 verifyPassword();
-            }
-        });
-
-        document.getElementById('chatSelect').addEventListener('keypress', function(event) {
-            if (event.key === 'Enter') {
-                deleteChat();
             }
         });
     </script>
