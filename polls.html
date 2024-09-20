@@ -5,30 +5,105 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Poll</title>
     <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5f5f5;
+            --text-color: #333;
+            --border-radius: 8px;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        label {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+        }
         .option-group {
+            margin-bottom: 15px;
+        }
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.3s ease;
             margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #3a7bc8;
+        }
+        #addOptionBtn {
+            background-color: #28a745;
+        }
+        #addOptionBtn:hover {
+            background-color: #218838;
+        }
+        #pollLink {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--secondary-color);
+            border-radius: var(--border-radius);
+        }
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
-    <h2>Create Poll</h2>
-    <form id="pollForm">
-        <label for="question">Question:</label>
-        <input type="text" id="question" required>
-        <div id="optionsContainer">
-            <div class="option-group">
-                <label for="option1">Option 1:</label>
-                <input type="text" class="option-input" id="option1" required>
+    <div class="container">
+        <h2>Create Poll</h2>
+        <form id="pollForm">
+            <label for="question">Question:</label>
+            <input type="text" id="question" required>
+            <div id="optionsContainer">
+                <div class="option-group">
+                    <label for="option1">Option 1:</label>
+                    <input type="text" class="option-input" id="option1" required>
+                </div>
+                <div class="option-group">
+                    <label for="option2">Option 2:</label>
+                    <input type="text" class="option-input" id="option2" required>
+                </div>
             </div>
-            <div class="option-group">
-                <label for="option2">Option 2:</label>
-                <input type="text" class="option-input" id="option2" required>
-            </div>
-        </div>
-        <button type="button" id="addOptionBtn">Add More Options</button>
-        <button type="submit">Create Poll</button>
-    </form>
-    <div id="pollLink"></div>
+            <button type="button" id="addOptionBtn">Add More Options</button>
+            <button type="submit">Create Poll</button>
+        </form>
+        <div id="pollLink"></div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
@@ -66,7 +141,6 @@
 
             if (question && options.length > 1) {
                 const newPollRef = push(ref(db, 'polls'));
-
                 set(newPollRef, {
                     question: question,
                     options: options
