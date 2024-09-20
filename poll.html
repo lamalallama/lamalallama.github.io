@@ -4,14 +4,97 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>View Poll</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5f5f5;
+            --text-color: #333;
+            --border-radius: 8px;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        form {
+            margin-bottom: 30px;
+        }
+        .option {
+            margin-bottom: 15px;
+        }
+        input[type="radio"] {
+            display: none;
+        }
+        label {
+            display: block;
+            padding: 10px 15px;
+            background-color: var(--secondary-color);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        input[type="radio"]:checked + label {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #3a7bc8;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #pollResult {
+            margin-top: 30px;
+        }
+        .result-bar {
+            height: 20px;
+            background-color: var(--primary-color);
+            border-radius: var(--border-radius);
+            margin-bottom: 10px;
+        }
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-    <h2 id="pollQuestion">Loading poll...</h2>
-    <form id="pollVoteForm">
-        <div id="pollOptions"></div>
-        <button type="submit" id="voteButton">Submit Vote</button>
-    </form>
-    <div id="pollResult"></div>
+    <div class="container">
+        <h2 id="pollQuestion">Loading poll...</h2>
+        <form id="pollVoteForm">
+            <div id="pollOptions"></div>
+            <button type="submit" id="voteButton">Submit Vote</button>
+        </form>
+        <div id="pollResult"></div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
@@ -57,7 +140,7 @@
 
                     pollData.options.forEach((option, index) => {
                         pollOptions.innerHTML += `
-                            <div>
+                            <div class="option">
                                 <input type="radio" name="pollOption" value="${index}" id="option${index}" required>
                                 <label for="option${index}">${option}</label>
                             </div>
@@ -129,7 +212,8 @@
                             const percentage = totalVotes ? ((votes / totalVotes) * 100).toFixed(2) : 0;
                             resultsHtml += `
                                 <div>
-                                    ${optionLabel}: ${votes} vote(s) (${percentage} %)
+                                    <div>${optionLabel}: ${votes} vote(s) (${percentage}%)</div>
+                                    <div class="result-bar" style="width: ${percentage}%"></div>
                                 </div>
                             `;
                         });
