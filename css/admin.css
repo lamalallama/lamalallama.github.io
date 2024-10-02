@@ -1,0 +1,176 @@
+body {
+    font-family: 'Courier New', monospace;
+    background-color: #000000;
+    color: #ff0000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 30px;
+    box-sizing: border-box;
+}
+
+.container {
+    background-color: #1a0000;
+    padding: 2rem;
+    border-radius: 0;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+    max-width: 600px;
+    width: 100%;
+    border: 2px solid #ff0000;
+}
+
+h1 {
+    color: #ff0000;
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-shadow: 2px 2px 4px rgba(255, 0, 0, 0.5);
+    font-size: 2rem;
+    text-align: center;
+}
+
+.input-group {
+    margin-bottom: 1.5rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.75rem;
+    color: #ff6666;
+    text-transform: uppercase;
+    font-size: 1rem;
+}
+
+input,
+select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ff0000;
+    border-radius: 0;
+    font-size: 1.1rem;
+    background-color: #330000;
+    color: #ff9999;
+    font-family: 'Courier New', monospace;
+    box-sizing: border-box;
+}
+
+button {
+    color: #ff0000;
+    text-transform: uppercase;
+    font-weight: bold;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.generalButton {
+    background-color: #660000;
+    border: 2px solid #ff0000;
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+    cursor: pointer;
+    border-radius: 0;
+    transition: all 0.3s;
+}
+
+.copyButton {
+    color: #ff0000;
+    background-color: transparent;
+    border: 2px solid #ff0000;
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.generalButton:hover, .copyButton:hover {
+    background-color: #ff0000;
+    color: #000000;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
+}
+
+.error {
+    color: #ffff00;
+    margin-top: 1.5rem;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(255, 255, 0, 0.5);
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+.success {
+    color: #00ff00;
+    margin-top: 1.5rem;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 255, 0, 0.5);
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+#chatDeletionForm,
+#chatContent {
+    display: none;
+}
+
+#chatContent {
+    margin-top: 1.5rem;
+}
+
+/* Add a pulsating effect to the container */
+@keyframes pulse {
+    0% { box-shadow: 0 0 20px rgba(255, 0, 0, 0.5); }
+    50% { box-shadow: 0 0 30px rgba(255, 0, 0, 0.8); }
+    100% { box-shadow: 0 0 20px rgba(255, 0, 0, 0.5); }
+}
+
+.container {
+    animation: pulse 2s infinite;
+}
+
+/* Mobile compatibility */
+@media screen and (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
+    .container {
+        padding: 1rem;
+        max-width: 100%;
+    }
+
+    h1 {
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+
+    input,
+    select,
+    button {
+        font-size: 0.9rem;
+        padding: 0.5rem;
+    }
+
+    .generalButton,
+    .copyButton {
+        padding: 0.75rem 1rem;
+    }
+
+    .copyButton {
+        font-size: 0.8rem;
+    }
+
+    .input-group {
+        margin-bottom: 1rem;
+    }
+
+    label {
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .error,
+    .success {
+        font-size: 0.9rem;
+        margin-top: 1rem;
+    }
+}

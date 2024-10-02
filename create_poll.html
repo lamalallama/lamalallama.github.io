@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Poll</title>
+    <style>
+        .option-group {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Create Poll</h2>
+    <form id="pollForm">
+        <label for="question">Question:</label>
+        <input type="text" id="question" required>
+        <div id="optionsContainer">
+            <div class="option-group">
+                <label for="option1">Option 1:</label>
+                <input type="text" class="option-input" id="option1" required>
+            </div>
+            <div class="option-group">
+                <label for="option2">Option 2:</label>
+                <input type="text" class="option-input" id="option2" required>
+            </div>
+        </div>
+        <button type="button" id="addOptionBtn">Add More Options</button>
+        <button type="submit">Create Poll</button>
+    </form>
+    <div id="pollLink"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+        import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCjVxYOmna_tyxGtbIKYS_wpYQJ1Vg6ws0",
+            authDomain: "galeria-cetis58.firebaseapp.com",
+            databaseURL: "https://galeria-cetis58-default-rtdb.firebaseio.com/"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        const pollForm = document.getElementById('pollForm');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const addOptionBtn = document.getElementById('addOptionBtn');
+        const pollLinkDiv = document.getElementById('pollLink');
+
+        addOptionBtn.addEventListener('click', () => {
+            const optionCount = optionsContainer.querySelectorAll('.option-group').length + 1;
+            const newOptionDiv = document.createElement('div');
+            newOptionDiv.classList.add('option-group');
+            newOptionDiv.innerHTML = `
+                <label for="option${optionCount}">Option ${optionCount}:</label>
+                <input type="text" class="option-input" id="option${optionCount}" required>
+            `;
+            optionsContainer.appendChild(newOptionDiv);
+        });
+
+        pollForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const question = document.getElementById('question').value;
+            const options = Array.from(document.querySelectorAll('.option-input')).map(input => input.value);
+
+            if (question && options.length > 1) {
+                const newPollRef = push(ref(db, 'polls'));
+
+                set(newPollRef, {
+                    question: question,
+                    options: options
+                }).then(() => {
+                    const pollId = newPollRef.key;
+                    const pollUrl = `poll.html?pollId=${pollId}`;
+                    pollLinkDiv.innerHTML = `Poll created! Share this link: <a href="${pollUrl}" target="_blank">View Poll</a>`;
+                }).catch((error) => {
+                    console.error("Error creating poll:", error);
+                });
+            } else {
+                alert("Please provide a question and at least two options.");
+            }
+        });
+    </script>
+</body>
+</html>

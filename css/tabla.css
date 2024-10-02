@@ -1,0 +1,191 @@
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background-color: #f0f0f0;
+    color: #333333;
+    margin: 0;
+    padding: 10px;
+    line-height: 1.6;
+}
+
+h1 {
+    text-align: center;
+    color: #333333;
+    font-weight: 300;
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+.container {
+    max-width: 100%;
+    margin: 0 auto;
+    position: relative;
+    background-color: #ffffff;
+    padding: 15px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.input-container,
+#userPanel,
+#adminPanel {
+    margin-bottom: 20px;
+}
+
+input,
+textarea,
+button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+    border: 1px solid #cccccc;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    background-color: #ffffff;
+    font-size: 16px;
+}
+
+input:focus,
+textarea:focus {
+    outline: none;
+    border-color: #999999;
+    box-shadow: 0 0 5px rgba(153, 153, 153, 0.5);
+}
+
+button {
+    background-color: #666666;
+    color: #ffffff;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+button:hover {
+    background-color: #999999;
+}
+
+#postList {
+    margin-top: 20px;
+}
+
+.post {
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    padding: 15px;
+    margin-bottom: 15px;
+    position: relative;
+    transition: box-shadow 0.3s ease;
+}
+
+.post:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.post h3 {
+    margin-top: 0;
+    color: #333333;
+    font-size: 18px;
+}
+
+.post-content {
+    max-height: 80px;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
+
+.post-content.expanded {
+    max-height: none;
+}
+
+.toggle-content {
+    cursor: pointer;
+    position: static;
+    background-color: transparent;
+    padding: 5px 0;
+    border: none;
+    font-size: 14px;
+    color: #666666;
+    margin-top: 10px;
+    width: auto;
+}
+
+.post-date,
+.post-username {
+    font-size: 0.8em;
+    color: #999999;
+    display: block;
+    margin-top: 10px;
+}
+
+.deleteBtn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #666666;
+    color: #ffffff;
+    border: none;
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+#userPanel,
+#adminPanel {
+    background-color: #ffffff;
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+}
+
+#loginBtn {
+    width: auto;
+}
+
+.login-form {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    body {
+        padding: 20px;
+    }
+
+    .container {
+        max-width: 800px;
+        padding: 20px;
+    }
+
+    h1 {
+        font-size: 28px;
+    }
+
+    .post {
+        padding: 20px;
+    }
+
+    .post h3 {
+        font-size: 20px;
+    }
+
+    .post-content {
+        max-height: 100px;
+    }
+
+    .toggle-content {
+        position: absolute;
+        bottom: 10px;
+        left: 20px;
+    }
+
+    .post-date {
+        position: absolute;
+        bottom: 10px;
+        right: 20px;
+    }
+
+    .post-username {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+    }
+}

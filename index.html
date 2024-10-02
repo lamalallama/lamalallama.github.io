@@ -4,109 +4,86 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>EL CHAT</title>
+    <link rel="stylesheet" href="css/msg.css"/>
     <style>
-      body {
-        font-family: Arial, sans-serif;
-        background-color: #222;
-        color: #fff;
-        text-align: center;
-        margin: 0;
-        padding: 0;
+      .message {
+        max-width: 70%;
+        margin-bottom: 10px;
+        padding: 12px;
+        border-radius: 8px;
+        clear: both;
       }
-      .container {
-        max-width: 600px;
-        margin: auto;
-        padding: 20px;
+      .message.user {
+        float: right;
+        background-color: #007bff;
+        color: white;
       }
-      .button {
-        display: inline-block;
-        padding: 10px 20px;
-        background-color: #4caf50;
-        color: #fff;
-        text-decoration: none;
-        border: none;
-        cursor: pointer;
-        font-size: 16px;
-        margin: 10px;
-        border-radius: 5px;
-        transition: background-color 0.3s ease;
+      .message.other {
+        float: left;
+        background-color: #3a3a3a;
       }
-      .button:hover {
-        background-color: #45a049;
+      .message.admin {
+        float: left;
+        background-color: #ff4500;
+        color: white;
       }
-      .chat-code {
-        font-size: 20px;
-        background-color: #333;
-        color: #fff;
-        padding: 10px;
-        border-radius: 5px;
-        margin: 20px 0;
+      .message img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 4px;
       }
       .chat-screen {
-        background-color: #333;
-        padding: 20px;
-        min-height: 300px;
-        border-radius: 10px;
-        margin-top: 20px;
-        text-align: left;
-        overflow-y: scroll;
-        max-height: 400px;
+        height: 500px;
+        background-color: #2a2a2a;
+        border: 1px solid #444;
       }
-      .message {
-        background-color: #444;
-        color: #fff;
-        padding: 10px;
-        margin: 5px 0;
-        border-radius: 5px;
+      .loading-message {
+        font-size: 12px;
+        color: #888;
+        text-align: center;
+        margin-top: 5px;
       }
-      .input-box {
-        width: calc(100% - 20px);
-        padding: 10px;
+      #main-menu {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background-color: #1a1a1a;
+      }
+      #main-menu h1 {
+        font-size: 2.5em;
+        margin-bottom: 30px;
+        color: #007bff;
+      }
+      #main-menu .button {
+        width: 200px;
         margin: 10px 0;
-        background-color: #444;
-        border: none;
-        color: #fff;
-        border-radius: 5px;
-        font-size: 16px;
+        padding: 12px 0;
+        font-size: 1.1em;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       }
-      .arrow-back {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        cursor: pointer;
-      }
-      .download-button {
-        display: inline-block;
-        padding: 10px 20px;
-        background-color: #007bff;
-        color: #fff;
-        text-decoration: none;
-        border: none;
-        cursor: pointer;
-        font-size: 16px;
-        margin: 10px;
-        border-radius: 5px;
-        transition: background-color 0.3s ease;
-      }
-      .download-button:hover {
+      #main-menu .button:hover {
         background-color: #0056b3;
       }
     </style>
   </head>
   <body>
     <div class="container">
-      <h1>EL CHAT</h1>
       <div id="main-menu">
-        <a href="#" class="button" onclick="createChat()">Crear Chat</a>
-        <a href="#" class="button" onclick="joinChat()">Unirse a Chat</a>
+        <h1>EL CHAT</h1>
+        <button class="button" onclick="createChat()">Crear Chat</button>
+        <button class="button" onclick="joinChat()">Unirse a Chat</button>
+        <button class="button" onclick="window.location.href='https://lamalallama.github.io/tabla.html'">Ir a Tabla</button>
+        <button class="button" onclick="window.location.href='https://lamalallama.github.io/admin.html'">Cosas Admin</button>
       </div>
 
       <!-- Create Chat Screen -->
       <div id="create-chat" style="display: none">
-        <a href="#" class="arrow-back" onclick="backToMainMenu()"
-          >&larr; Back</a
-        >
-        <h2>Create Chat</h2>
+        <a href="#" class="arrow-back" onclick="backToMainMenu()">&larr; Back</a>
+        <h2>Chat Room</h2>
         <div class="chat-code" id="chat-code-display"></div>
         <div class="chat-screen" id="chat-screen"></div>
         <input
@@ -116,17 +93,16 @@
           placeholder="Type your message..."
           onkeydown="if(event.key === 'Enter') sendMessage()"
         />
+        <input type="file" id="image-input" accept="image/*" style="display: none;" onchange="uploadImage(event)">
+        <button onclick="document.getElementById('image-input').click()" class="button">Upload Image</button>
         <button onclick="sendMessage()" class="button">Send</button>
-        <button onclick="downloadChat()" class="download-button">
-          Download Chat
-        </button>
+        <button onclick="downloadChat()" class="button">Download Chat</button>
+        <div id="loading-message" class="loading-message" style="display: none;">Uploading image...</div>
       </div>
 
       <!-- Join Chat Screen -->
       <div id="join-chat" style="display: none">
-        <a href="#" class="arrow-back" onclick="backToMainMenu()"
-          >&larr; Back</a
-        >
+        <a href="#" class="arrow-back" onclick="backToMainMenu()">&larr; Back</a>
         <h2>Join Chat</h2>
         <input
           type="text"
@@ -152,6 +128,13 @@
         update,
         remove,
       } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
+      import {
+        getStorage,
+        ref as storageRef,
+        uploadBytes,
+        getDownloadURL,
+        deleteObject,
+      } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-storage.js";
 
       const firebaseConfig = {
         apiKey: "AIzaSyBzxpoiDIzCXRX9L2iRuQ9KSPai6stkXNI",
@@ -164,8 +147,10 @@
 
       const app = initializeApp(firebaseConfig);
       const database = getDatabase(app);
+      const storage = getStorage(app);
 
       let userNumber = Math.floor(Math.random() * 1000); // Temporary user number
+      let isAdmin = false; // Flag to check if user is admin
 
       // Encryption function using AES
       function encryptMessage(message, key) {
@@ -183,9 +168,7 @@
         document.getElementById("main-menu").style.display = "none";
         document.getElementById("create-chat").style.display = "block";
         const chatCode = generateChatCode();
-        document.getElementById(
-          "chat-code-display"
-        ).innerText = `Chat Code: ${chatCode}`;
+        document.getElementById("chat-code-display").innerText = `Chat Code: ${chatCode}`;
 
         const chatRef = ref(database, "chats/" + chatCode);
         const chatScreen = document.getElementById("chat-screen");
@@ -194,15 +177,33 @@
           chatScreen.innerHTML = ""; // Clear screen before re-rendering messages
           if (messages) {
             for (const messageKey in messages) {
-              const encryptedMessage = messages[messageKey].message;
-              if (encryptedMessage) {
-                const decryptedMessage = decryptMessage(
-                  encryptedMessage,
-                  chatCode
-                );
+              const message = messages[messageKey];
+              if (message.type === 'text') {
+                const decryptedMessage = decryptMessage(message.content, chatCode);
                 const messageElement = document.createElement("div");
                 messageElement.innerText = decryptedMessage;
                 messageElement.classList.add("message");
+                if (decryptedMessage.startsWith(`[${userNumber}]`)) {
+                  messageElement.classList.add("user");
+                } else if (message.isAdmin) {
+                  messageElement.classList.add("admin");
+                } else {
+                  messageElement.classList.add("other");
+                }
+                chatScreen.appendChild(messageElement);
+              } else if (message.type === 'image') {
+                const messageElement = document.createElement("div");
+                const imgElement = document.createElement("img");
+                imgElement.src = message.content;
+                messageElement.appendChild(imgElement);
+                messageElement.classList.add("message");
+                if (message.sender === userNumber) {
+                  messageElement.classList.add("user");
+                } else if (message.isAdmin) {
+                  messageElement.classList.add("admin");
+                } else {
+                  messageElement.classList.add("other");
+                }
                 chatScreen.appendChild(messageElement);
               }
             }
@@ -219,23 +220,49 @@
         const messageInput = document.getElementById("message-input");
         const message = messageInput.value;
         if (message.trim() !== "") {
-          const chatCode = document
-            .getElementById("chat-code-display")
-            .innerText.split(" ")[2];
-
-          const encryptedMessage = encryptMessage(
-            `[${userNumber}] ${message}`,
-            chatCode
-          );
-
+          const chatCode = document.getElementById("chat-code-display").innerText.split(" ")[2];
+          const encryptedMessage = encryptMessage(`[${userNumber}] ${message}`, chatCode);
           const chatRef = ref(database, "chats/" + chatCode);
-          push(chatRef, {
-            message: encryptedMessage, // Send encrypted message
-          });
+          push(chatRef, { type: 'text', content: encryptedMessage, isAdmin: isAdmin });
           messageInput.value = ""; // Clear input
-
-          // Update last activity time
           update(chatRef, { lastActive: new Date().toISOString() });
+        }
+      };
+
+      // Function to upload and send an image
+      window.uploadImage = function uploadImage(event) {
+        const file = event.target.files[0];
+        if (file && file.size <= 10 * 1024 * 1024) { // 10MB limit
+          const chatCode = document.getElementById("chat-code-display").innerText.split(" ")[2];
+          const imageRef = storageRef(storage, `images/${chatCode}/${Date.now()}_${file.name}`);
+          
+          // Show loading message
+          document.getElementById("loading-message").style.display = "block";
+          
+          uploadBytes(imageRef, file).then((snapshot) => {
+            getDownloadURL(snapshot.ref).then((downloadURL) => {
+              const chatRef = ref(database, "chats/" + chatCode);
+              push(chatRef, { type: 'image', content: downloadURL, sender: userNumber, isAdmin: isAdmin });
+              
+              // Hide loading message
+              document.getElementById("loading-message").style.display = "none";
+              
+              // Delete the image after 5 minutes
+              setTimeout(() => {
+                deleteObject(imageRef).then(() => {
+                  console.log("Image deleted successfully");
+                }).catch((error) => {
+                  console.error("Error deleting image:", error);
+                });
+              }, 5 * 60 * 1000);
+            });
+          }).catch((error) => {
+            console.error("Error uploading image:", error);
+            // Hide loading message in case of error
+            document.getElementById("loading-message").style.display = "none";
+          });
+        } else {
+          alert("Please select an image file under 10MB.");
         }
       };
 
@@ -252,9 +279,11 @@
         if (chatCode !== "") {
           document.getElementById("join-chat").style.display = "none";
           document.getElementById("create-chat").style.display = "block";
-          document.getElementById(
-            "chat-code-display"
-          ).innerText = `Chat Code: ${chatCode}`;
+          document.getElementById("chat-code-display").innerText = `Chat Code: ${chatCode}`;
+
+          // Check if user is admin
+          const urlParams = new URLSearchParams(window.location.search);
+          isAdmin = urlParams.get('isAdmin') === 'true';
 
           const chatRef = ref(database, "chats/" + chatCode);
           const chatScreen = document.getElementById("chat-screen");
@@ -263,15 +292,33 @@
             chatScreen.innerHTML = ""; // Clear screen before re-rendering messages
             if (messages) {
               for (const messageKey in messages) {
-                const encryptedMessage = messages[messageKey].message;
-                if (encryptedMessage) {
-                  const decryptedMessage = decryptMessage(
-                    encryptedMessage,
-                    chatCode
-                  );
+                const message = messages[messageKey];
+                if (message.type === 'text') {
+                  const decryptedMessage = decryptMessage(message.content, chatCode);
                   const messageElement = document.createElement("div");
                   messageElement.innerText = decryptedMessage;
                   messageElement.classList.add("message");
+                  if (decryptedMessage.startsWith(`[${userNumber}]`)) {
+                    messageElement.classList.add("user");
+                  } else if (message.isAdmin) {
+                    messageElement.classList.add("admin");
+                  } else {
+                    messageElement.classList.add("other");
+                  }
+                  chatScreen.appendChild(messageElement);
+                } else if (message.type === 'image') {
+                  const messageElement = document.createElement("div");
+                  const imgElement = document.createElement("img");
+                  imgElement.src = message.content;
+                  messageElement.appendChild(imgElement);
+                  messageElement.classList.add("message");
+                  if (message.sender === userNumber) {
+                    messageElement.classList.add("user");
+                  } else if (message.isAdmin) {
+                    messageElement.classList.add("admin");
+                  } else {
+                    messageElement.classList.add("other");
+                  }
                   chatScreen.appendChild(messageElement);
                 }
               }
@@ -299,31 +346,15 @@
       // Function to download chat as TXT file
       window.downloadChat = function downloadChat() {
         const chatScreen = document.getElementById("chat-screen");
-        const chatCode = document
-          .getElementById("chat-code-display")
-          .innerText.split(" ")[2];
+        const chatCode = document.getElementById("chat-code-display").innerText.split(" ")[2];
         const chatContent = chatScreen.innerText;
-
-        const blob = new Blob([chatContent], {
-          type: "text/plain;charset=utf-8",
-        });
+        const blob = new Blob([chatContent], { type: "text/plain;charset=utf-8" });
         const downloadLink = document.createElement("a");
         downloadLink.href = URL.createObjectURL(blob);
         downloadLink.download = `chat_${chatCode}.txt`;
         downloadLink.click();
       };
     </script>
-    <button
-      onclick="window.location.href='https://lamalallama.github.io/tabla.html'"
-      class="button"
-    >
-      Ir a Tabla
-    </button>
-    <button
-      onclick="window.location.href='https://lamalallama.github.io/admin.html'"
-      class="button"
-    >
-      Cosas Admin
-    </button>
+    </div>
   </body>
 </html>

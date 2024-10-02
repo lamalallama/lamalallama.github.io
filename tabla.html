@@ -4,146 +4,135 @@
 <!-- 10/9/2024 -->
 <!-- Servidor Dinamico: Firebase - Google -->
 <!-- Servidor Estatico: Github -->
- <!-- Agregar Funciones: 
-    Hacer 'pin' a las publicaciones solo con admin, estas estaran hasta arriba sin importar que.
-    Agregar soporte a hipertexto.
-    Hacer que los url se puedan incrustar en cualquier texto.
-  -->
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tabla</title>
+  <link rel="stylesheet" href="css/tabla.css">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f5f5f5;
-      color: #333;
-      margin: 0;
-      padding: 20px;
+    .pinned {
+      border: 2px solid gold;
+      background-color: #ffffd0;
     }
-    h1 {
-      text-align: center;
-      color: #333;
-    }
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      position: relative;
-    }
-    .input-container, #userPanel, #adminPanel {
-      margin-bottom: 20px;
-    }
-    input, textarea, button {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 10px;
-      box-sizing: border-box;
-    }
-    #postList {
-      margin-top: 20px;
-    }
-    .post {
-      background-color: #fff;
-      border: 1px solid #ddd;
-      padding: 15px;
-      margin-bottom: 15px;
-      position: relative;
-    }
-    .post h3 {
-      margin-top: 0;
-    }
-    .post-content {
-      max-height: 100px;
-      overflow: hidden;
-      transition: max-height 0.3s ease;
-    }
-    .post-content.expanded {
-      max-height: none;
-    }
-    .toggle-content {
-      cursor: pointer;
-      position: absolute;
-      bottom: .35px;
-      left: 200px;
-      background-color: #ffffff;
-      padding: 1px 10px;
-      border: none;
-      font-size: 16px;
-      width: 50%;
-    }
-    .post-date {
-      font-size: 0.8em;
-      color: #777;
-      position: absolute;
-      bottom: 5px;
-      right: 10px;
-    }
-    .post-username {
-      font-size: 0.9em;
-      color: #444;
-      position: absolute;
-      top: 10px;
-      right: 10px;
-    }
-    .deleteBtn {
+    .edit-form {
       display: none;
-      position: absolute;
-      top: 10px;
-      right: 10px;
+      margin-top: 10px;
+    }
+    .edit-form input, .edit-form textarea {
+      width: 100%;
+      margin-bottom: 5px;
+    }
+    .hidden {
+      display: none;
+    }
+    .layout {
+      display: flex;
+      flex-direction: row;
+      position: relative;
+      min-height: 100vh;
+    }
+    .news-section {
+      width: 200px;
+      padding: 10px;
+      font-size: 0.9em;
+      margin-right: 20px;
+      display: none;
+    }
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    #showNewsBtn {
+      display: block;
     }
     #userPanel {
       position: absolute;
-      top: -60px;
-      left: 0;
-      width: auto;
-      background-color: #eee;
-      padding: 10px;
-      border-radius: 5px;
+      top: 10px;
+      right: 10px;
     }
-    #loginBtn {
-      width: auto;
+    @media (max-width: 768px) {
+      .layout {
+        flex-direction: column;
+      }
+      .news-section {
+        width: 100%;
+        margin-bottom: 20px;
+        margin-right: 0;
+      }
+    }
+    body, html {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    #hideNewsBtn {
+      display: none;
+    }
+    .main-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .main-buttons button {
+      font-size: 0.9em;
+      padding: 5px 10px;
     }
     #adminPanel {
-      background-color: #eee;
-      padding: 15px;
-      border-radius: 5px;
-    }
-    .login-form {
       display: none;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div id="userPanel">
-      <button id="showLoginBtn">Iniciar sesión</button>  
-      <div class="login-form">
-        <input type="text" id="usernameInput" placeholder="Nombre de usuario">
-        <input type="password" id="userPassword" placeholder="Contraseña">
-        <button id="loginBtn">Iniciar sesión / Registrarse</button>
+  <div id="userPanel">
+    <button id="showLoginBtn">Iniciar sesión</button>  
+    <div class="login-form">
+      <input type="text" id="usernameInput" placeholder="Nombre de usuario">
+      <input type="password" id="userPassword" placeholder="Contraseña">
+      <button id="loginBtn">Iniciar sesión / Registrarse</button>
+    </div>
+  </div>
+  
+  <div class="layout">
+    <div class="news-section">
+      <h2>Noticias</h2>
+      <div id="newsContent"></div>
+    </div>
+    <div class="main-content">
+      <div class="container">
+        <h1 id="tableTitle">Tabla</h1>
+        <div class="main-buttons">
+          <button id="showNewsBtn">Mostrar Noticias</button>
+          <button id="hideNewsBtn">Ocultar Noticias</button>
+          <button onclick="window.history.back();">Regresar</button> 
+          <a href="https://lamalallama.github.io/polls.html">
+            <button>Hacer Una Votación</button>
+          </a>
+        </div>
+
+        <div class="input-container">
+          <input type="text" id="titleInput" placeholder="Título">
+          <textarea id="textInput" placeholder="Texto"></textarea>
+          <button id="addPostBtn">Añadir Publicación</button>
+        </div>
+
+        <!-- Para ver el panel de administrador, haz clic en el título "Tabla" 10 veces sin interrupción -->
+        <div id="adminPanel" style="display: none;">
+          <input type="password" id="adminPassword" placeholder="Contraseña de Administrador">
+          <button id="adminToggleBtn">Activar Modo Administrador</button>
+          <button id="purgeBtn" style="display:none;">Eliminar Todas las Publicaciones</button>
+        </div>
+
+        <div id="userControls">
+          <button id="togglePinnedBtn">Mostrar/Ocultar Publicaciones Fijadas</button>
+        </div>
+
+        <div id="postList"></div>
       </div>
     </div>
-    
-    <h1>Tabla</h1>
-    <button onclick="window.history.back();">Regresar</button> 
-    <a href="https://lamalallama.github.io/polls.html">
-      <button>Hacer Una Votación</button>
-    </a>
-
-    <div class="input-container">
-      <input type="text" id="titleInput" placeholder="Título">
-      <textarea id="textInput" placeholder="Texto"></textarea>
-      <button id="addPostBtn">Añadir Publicación</button>
-    </div>
-
-    <div id="adminPanel">
-      <input type="password" id="adminPassword" placeholder="Contraseña de Administrador">
-      <button id="adminToggleBtn">Activar Modo Administrador</button>
-      <button id="purgeBtn" style="display:none;">Eliminar Todas las Publicaciones</button>
-    </div>
-
-    <div id="postList"></div>
   </div>
 
   <!-- Import CryptoJS for MD5 hashing -->
@@ -152,7 +141,7 @@
   <!-- Firebase Setup -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-    import { getDatabase, ref, push, set, get, onValue, remove } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
+    import { getDatabase, ref, push, set, get, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyCjVxYOmna_tyxGtbIKYS_wpYQJ1Vg6ws0",
@@ -169,8 +158,47 @@
     const db = getDatabase(app);
     const postsRef = ref(db, 'posts');
     const usersRef = ref(db, 'users');
+    const newsRef = ref(db, 'news');
 
     let currentUser = null;
+    let adminMode = false;
+    let showPinnedPosts = true;
+
+    // News section
+    function initializeNews() {
+      get(newsRef).then((snapshot) => {
+        if (!snapshot.exists()) {
+          set(newsRef, {
+            text: "Bienvenido a nuestra sección de noticias. ¡Mantente atento a las actualizaciones!"
+          });
+        }
+      });
+
+      onValue(newsRef, (snapshot) => {
+        const newsContent = document.getElementById('newsContent');
+        if (snapshot.exists()) {
+          newsContent.textContent = snapshot.val().text;
+        }
+      });
+    }
+
+    initializeNews();
+
+    const showNewsBtn = document.getElementById('showNewsBtn');
+    showNewsBtn.addEventListener('click', function() {
+      const newsSection = document.querySelector('.news-section');
+      newsSection.style.display = 'block';
+      showNewsBtn.style.display = 'none';
+      hideNewsBtn.style.display = 'block';
+    });
+
+    const hideNewsBtn = document.getElementById('hideNewsBtn');
+    hideNewsBtn.addEventListener('click', function() {
+      const newsSection = document.querySelector('.news-section');
+      newsSection.style.display = 'none';
+      showNewsBtn.style.display = 'block';
+      hideNewsBtn.style.display = 'none';
+    });
 
     const showLoginBtn = document.getElementById('showLoginBtn');
     const loginForm = document.querySelector('.login-form');
@@ -221,7 +249,8 @@
           title: title,
           text: text,
           date: new Date().toISOString(),
-          username: currentUser || 'Anónimo'
+          username: currentUser || 'Anónimo',
+          pinned: false
         });
 
         document.getElementById('titleInput').value = '';
@@ -241,11 +270,21 @@
         posts.push(post);
       });
 
-      posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+      posts.sort((a, b) => {
+        if (a.pinned && !b.pinned) return -1;
+        if (!a.pinned && b.pinned) return 1;
+        return new Date(b.date) - new Date(a.date);
+      });
 
       posts.forEach((post) => {
         const postElement = document.createElement('div');
         postElement.className = 'post';
+        if (post.pinned) {
+          postElement.classList.add('pinned');
+          if (!showPinnedPosts) {
+            postElement.classList.add('hidden');
+          }
+        }
         const postDate = new Date(post.date);
         const formattedDate = postDate.toLocaleString('es-ES', { 
           year: 'numeric', 
@@ -258,24 +297,63 @@
         const contentHtml = `
           <h3>${post.title}</h3>
           <div class="post-content">
-            <p>${post.text}</p>
+            <p>${formatText(post.text)}</p>
           </div>
           <button class="toggle-content">▼</button>
           <span class="post-date">${formattedDate}</span>
           <span class="post-username">${post.username}</span>
-          <button class="deleteBtn" data-id="${post.id}">Eliminar</button>
+          ${adminMode ? `
+            <button class="deleteBtn" data-id="${post.id}">Eliminar</button>
+            <button class="editBtn" data-id="${post.id}">Editar</button>
+            <button class="pinBtn" data-id="${post.id}">${post.pinned ? 'Desfijar' : 'Fijar'}</button>
+          ` : ''}
+          <div class="edit-form" id="edit-${post.id}">
+            <input type="text" class="edit-title" value="${post.title}">
+            <textarea class="edit-text">${post.text}</textarea>
+            <button class="saveEditBtn" data-id="${post.id}">Guardar</button>
+            <button class="cancelEditBtn" data-id="${post.id}">Cancelar</button>
+          </div>
         `;
         
         postElement.innerHTML = contentHtml;
 
         postList.appendChild(postElement);
 
-        const deleteBtn = postElement.querySelector('.deleteBtn');
-        deleteBtn.addEventListener('click', function() {
-          if (confirm('¿Estás seguro de que quieres eliminar esta publicación?')) {
-            remove(ref(db, `posts/${post.id}`));
-          }
-        });
+        if (adminMode) {
+          const deleteBtn = postElement.querySelector('.deleteBtn');
+          deleteBtn.addEventListener('click', function() {
+            if (confirm('¿Estás seguro de que quieres eliminar esta publicación?')) {
+              remove(ref(db, `posts/${post.id}`));
+            }
+          });
+
+          const pinBtn = postElement.querySelector('.pinBtn');
+          pinBtn.addEventListener('click', function() {
+            update(ref(db, `posts/${post.id}`), { pinned: !post.pinned });
+          });
+
+          const editBtn = postElement.querySelector('.editBtn');
+          editBtn.addEventListener('click', function() {
+            postElement.querySelector('.edit-form').style.display = 'block';
+          });
+
+          const saveEditBtn = postElement.querySelector('.saveEditBtn');
+          saveEditBtn.addEventListener('click', function() {
+            const newTitle = postElement.querySelector('.edit-title').value.trim();
+            const newText = postElement.querySelector('.edit-text').value.trim();
+            if (newTitle && newText) {
+              update(ref(db, `posts/${post.id}`), { title: newTitle, text: newText });
+              postElement.querySelector('.edit-form').style.display = 'none';
+            } else {
+              alert('Por favor, ingresa tanto el título como el texto.');
+            }
+          });
+
+          const cancelEditBtn = postElement.querySelector('.cancelEditBtn');
+          cancelEditBtn.addEventListener('click', function() {
+            postElement.querySelector('.edit-form').style.display = 'none';
+          });
+        }
 
         const toggleBtn = postElement.querySelector('.toggle-content');
         const content = postElement.querySelector('.post-content');
@@ -286,23 +364,22 @@
       });
     });
 
-    let adminMode = false;
     const adminToggleBtn = document.getElementById('adminToggleBtn');
     adminToggleBtn.addEventListener('click', function() {
       const adminPassword = document.getElementById('adminPassword').value.trim();
       if (!adminMode && md5(adminPassword) === '4be365797a14c860e0fdb46398a299ac') {
         adminMode = true;
-        document.querySelectorAll('.deleteBtn').forEach(btn => btn.style.display = 'block');
         document.getElementById('purgeBtn').style.display = 'inline-block';
         adminToggleBtn.textContent = 'Desactivar Modo Administrador';
         alert('Modo Administrador activado.');
+        refreshPosts();
       } else if (adminMode) {
         adminMode = false;
-        document.querySelectorAll('.deleteBtn').forEach(btn => btn.style.display = 'none');
         document.getElementById('purgeBtn').style.display = 'none';
         adminToggleBtn.textContent = 'Activar Modo Administrador';
         document.getElementById('adminPassword').value = '';
         alert('Modo Administrador desactivado.');
+        refreshPosts();
       } else {
         alert('Contraseña de administrador incorrecta.');
       }
@@ -316,9 +393,58 @@
       }
     });
 
+    const togglePinnedBtn = document.getElementById('togglePinnedBtn');
+    togglePinnedBtn.addEventListener('click', function() {
+      showPinnedPosts = !showPinnedPosts;
+      const pinnedPosts = document.querySelectorAll('.pinned');
+      pinnedPosts.forEach(post => {
+        post.classList.toggle('hidden');
+      });
+      this.textContent = showPinnedPosts ? 'Ocultar Publicaciones Fijadas' : 'Mostrar Publicaciones Fijadas';
+    });
+
     function md5(string) {
       return CryptoJS.MD5(string).toString();
     }
+
+    function formatText(text) {
+      // Convert URLs to clickable links
+      text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+      
+      // Convert line breaks to <br> tags
+      text = text.replace(/\n/g, '<br>');
+      
+      return text;
+    }
+
+    function refreshPosts() {
+      // Trigger a re-render of the posts
+      get(postsRef).then((snapshot) => {
+        const event = new CustomEvent('value', { detail: snapshot });
+        postsRef.dispatchEvent(event);
+      });
+    }
+
+    // Show admin panel when title is clicked 10 times without interruption
+    const tableTitle = document.getElementById('tableTitle');
+    let clickCount = 0;
+    let lastClickTime = 0;
+    const clickThreshold = 500; // 500ms between clicks
+
+    tableTitle.addEventListener('click', function() {
+      const currentTime = new Date().getTime();
+      if (currentTime - lastClickTime <= clickThreshold) {
+        clickCount++;
+        if (clickCount === 10) {
+          const adminPanel = document.getElementById('adminPanel');
+          adminPanel.style.display = adminPanel.style.display === 'none' ? 'block' : 'none';
+          clickCount = 0;
+        }
+      } else {
+        clickCount = 1;
+      }
+      lastClickTime = currentTime;
+    });
   </script>
 </body>
 </html>

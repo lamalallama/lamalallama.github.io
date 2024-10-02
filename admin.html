@@ -3,37 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Page</title>
-    <link rel="stylesheet" href="admin.css">
+    <title>RESTRICTED ACCESS</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <style>
+        #chatContent {
+            background-color: #330000;
+            border: 1px solid #ff0000;
+            padding: 1rem;
+            margin-top: 1rem;
+            height: 300px;
+            overflow-y: auto;
+        }
+        .message {
+            margin-bottom: 0.5rem;
+        }
+        .admin-name {
+            color: #00ff00;
+            font-weight: bold;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>Admin</h1>
+        <h1>WARNING: UNAUTHORIZED ACCESS PROHIBITED</h1>
         <div id="passwordForm">
             <div class="input-group">
-                <label for="password">Password:</label>
+                <label for="password">ENTER AUTHORIZATION CODE:</label>
                 <input type="password" id="password" required>
             </div>
-            <button class="generalButton" id="submitPassword">Submit</button>
+            <button class="generalButton" id="submitPassword">SUBMIT OR FACE CONSEQUENCES</button>
         </div>
         <div id="chatDeletionForm" style="display: none;">
             <div class="input-group">
-                <label for="chatSelect">Select Chat:</label>
+                <label for="chatSelect">SELECT TARGET CHAT:</label>
                 <select id="chatSelect">
                     <!-- Chats will be populated here -->
                 </select>
-                <button class="copyButton" class="copy" id="copyChat">Copy Chat Code</button>
+                <button class="copyButton" class="copy" id="enterChat">ENTER CHAT</button>
             </div>
-            <button class="generalButton" id="refreshChats">Refresh Chats</button>
-            <button class="generalButton" id="deleteChat">Delete Chat</button>
-            <button class="generalButton" id="backButton">Back</button>
+            <button class="generalButton" id="refreshChats">FORCE REFRESH</button>
+            <button class="generalButton" id="deleteChat">OBLITERATE CHAT</button>
+            <button class="generalButton" id="backButton">RETREAT</button>
+            <div class="input-group">
+                <label for="adminName">ADMIN IDENTIFIER:</label>
+                <input type="text" id="adminName" value="ADMIN" required>
+            </div>
+            <div id="chatContent"></div>
         </div>
         <div id="messageContainer"></div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getDatabase, ref, get, set, update, remove } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
+        import { getDatabase, ref, get, set, update, remove, push, onChildAdded } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBzxpoiDIzCXRX9L2iRuQ9KSPai6stkXNI",
@@ -66,14 +89,12 @@
             try {
                 const snapshot = await get(adminRef);
                 if (!snapshot.exists()) {
-                    // Initialize admin data with default values
                     await set(adminRef, {
-                        hash: "your-default-hash",  // Replace with your hash
                         failedAttempts: 0
                     });
                 }
             } catch (error) {
-                showMessage(`Error initializing admin data: ${error.message}`, true);
+                showMessage(`CRITICAL ERROR: ADMIN DATA INITIALIZATION FAILED: ${error.message}`, true);
             }
         }
 
@@ -84,7 +105,7 @@
             const adminRef = ref(database, 'admin');
 
             try {
-                await initializeAdminData(); // Ensure admin data exists
+                await initializeAdminData();
 
                 const snapshot = await get(adminRef);
                 if (snapshot.exists()) {
@@ -93,25 +114,25 @@
                     if (data.hash === hash) {
                         document.getElementById('passwordForm').style.display = 'none';
                         document.getElementById('chatDeletionForm').style.display = 'block';
-                        showMessage("Access granted.");
+                        showMessage("ACCESS GRANTED. PROCEED WITH CAUTION.");
                         await update(adminRef, { failedAttempts: 0 });
                         loadChats();
                     } else {
                         let attempts = data.failedAttempts || 0;
                         attempts++;
                         if (attempts >= 5) {
-                            showMessage("Too many failed attempts. Access denied.", true);
+                            showMessage("SECURITY BREACH DETECTED. SYSTEM LOCKDOWN INITIATED.", true);
                             await update(adminRef, { failedAttempts: attempts });
                         } else {
-                            showMessage(`Incorrect password. Attempts remaining: ${5 - attempts}`, true);
+                            showMessage(`INTRUDER ALERT! INCORRECT CODE. ${5 - attempts} ATTEMPTS REMAINING BEFORE TOTAL LOCKDOWN.`, true);
                             await update(adminRef, { failedAttempts: attempts });
                         }
                     }
                 } else {
-                    showMessage("Admin data not found.", true);
+                    showMessage("CRITICAL ERROR: ADMIN DATA NOT FOUND. SYSTEM COMPROMISED.", true);
                 }
             } catch (error) {
-                showMessage(`Error verifying password: ${error.message}`, true);
+                showMessage(`FATAL ERROR: VERIFICATION PROCESS FAILED: ${error.message}`, true);
             }
         }
 
@@ -123,65 +144,109 @@
                 const snapshot = await get(dbRef);
                 if (snapshot.exists()) {
                     const chats = snapshot.val();
-                    chatSelect.innerHTML = ""; // Clear the dropdown
+                    chatSelect.innerHTML = "";
                     Object.keys(chats).forEach(chatCode => {
                         const option = document.createElement('option');
                         option.value = chatCode;
                         option.textContent = chatCode;
                         chatSelect.appendChild(option);
                     });
+                    loadChatMessages(chatSelect.value);
                 } else {
-                    showMessage("No chats available.", true);
+                    showMessage("NO CHATS DETECTED. SYSTEM EMPTY OR COMPROMISED.", true);
                 }
             } catch (error) {
-                showMessage(`Error loading chats: ${error.message}`, true);
+                showMessage(`CRITICAL FAILURE: CHAT LOADING ERROR: ${error.message}`, true);
             }
         }
 
         async function deleteChat() {
             const chatCode = document.getElementById('chatSelect').value;
             if (!chatCode) {
-                showMessage("Please select a valid chat code.", true);
+                showMessage("ERROR: INVALID CHAT CODE. TERMINATION ABORTED.", true);
                 return;
             }
 
             try {
                 const chatRef = ref(database, `chats/${chatCode}`);
                 await remove(chatRef);
-                showMessage("Chat deleted successfully.");
-                loadChats();  // Refresh the chat list after deletion
+                showMessage("TARGET ELIMINATED. CHAT DESTROYED SUCCESSFULLY.");
+                loadChats();
+                
+                // Kick all users from the chat
+                const usersRef = ref(database, `users`);
+                const usersSnapshot = await get(usersRef);
+                if (usersSnapshot.exists()) {
+                    const users = usersSnapshot.val();
+                    Object.keys(users).forEach(async (userId) => {
+                        if (users[userId].currentChat === chatCode) {
+                            await update(ref(database, `users/${userId}`), { currentChat: null });
+                        }
+                    });
+                }
             } catch (error) {
-                showMessage(`Error deleting chat: ${error.message}`, true);
+                showMessage(`CRITICAL ERROR: CHAT TERMINATION FAILED: ${error.message}`, true);
             }
         }
 
-        function copyChatCode() {
+        function enterChat() {
             const chatSelect = document.getElementById('chatSelect');
             const chatCode = chatSelect.value;
+            const adminName = document.getElementById('adminName').value || 'ADMIN';
             if (!chatCode) {
-                showMessage("Please select a valid chat code to copy.", true);
+                showMessage("ERROR: INVALID CHAT CODE. ENTRY ABORTED.", true);
                 return;
             }
-            navigator.clipboard.writeText(chatCode).then(() => {
-                showMessage("Chat code copied to clipboard.");
-            }).catch(err => {
-                showMessage(`Failed to copy chat code: ${err.message}`, true);
-            });
+            // Generate a secure token for admin authentication
+            const adminToken = CryptoJS.lib.WordArray.random(128 / 8).toString();
+            // Store the admin token in localStorage
+            localStorage.setItem('adminToken', adminToken);
+            // Redirect to the chat page with admin token
+            window.location.href = `index.html?chatCode=${chatCode}&adminToken=${adminToken}&adminName=${encodeURIComponent(adminName)}`;
         }
 
         function goBack() {
             window.history.back();
         }
 
+        function loadChatMessages(chatCode) {
+            const chatContent = document.getElementById('chatContent');
+            chatContent.innerHTML = '';
+            const chatRef = ref(database, `chats/${chatCode}`);
+            onChildAdded(chatRef, (snapshot) => {
+                const message = snapshot.val();
+                displayMessage(message, chatContent);
+            });
+        }
+
+        function displayMessage(message, container) {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message';
+            const senderElement = document.createElement('span');
+            senderElement.className = message.isAdmin ? 'admin-name' : 'user-name';
+            senderElement.style.color = message.isAdmin ? '#00ff00' : '#ff0000';
+            senderElement.textContent = `${message.sender}: `;
+            const messageTextElement = document.createElement('span');
+            messageTextElement.textContent = message.message;
+            
+            messageElement.appendChild(senderElement);
+            messageElement.appendChild(messageTextElement);
+            container.appendChild(messageElement);
+            container.scrollTop = container.scrollHeight;
+        }
+
         document.getElementById('submitPassword').addEventListener('click', verifyPassword);
         document.getElementById('refreshChats').addEventListener('click', loadChats);
         document.getElementById('deleteChat').addEventListener('click', deleteChat);
-        document.getElementById('copyChat').addEventListener('click', copyChatCode);
+        document.getElementById('enterChat').addEventListener('click', enterChat);
         document.getElementById('backButton').addEventListener('click', goBack);
         document.getElementById('password').addEventListener('keypress', function(event) {
             if (event.key === 'Enter') {
                 verifyPassword();
             }
+        });
+        document.getElementById('chatSelect').addEventListener('change', function() {
+            loadChatMessages(this.value);
         });
     </script>
 </body>
