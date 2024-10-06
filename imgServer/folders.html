@@ -3,31 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Folder Viewer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="tailwind.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 </head>
 <body class="bg-gray-900 text-white font-body">
-    <div class="min-h-screen flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <h1 class="text-4xl font-extrabold text-white mb-8">Image Folder Viewer</h1>
-        <div id="folderInfo" class="text-xl mb-6"></div>
-        <div class="w-full max-w-6xl flex flex-col md:flex-row">
-            <div class="md:w-1/3 mb-6 md:mb-0 md:pr-4">
-                <h2 class="text-2xl font-bold mb-4">Image List</h2>
-                <div id="imageList" class="bg-gray-800 p-4 rounded-lg overflow-y-auto max-h-[60vh]"></div>
+    <div class="min-h-screen flex flex-col items-center justify-start py-8 px-4 sm:px-6 lg:px-8">
+        <div class="w-full max-w-7xl flex flex-col md:flex-row">
+            <div class="md:w-1/5 mb-4 md:mb-0 md:pr-4">
+                <h2 class="text-xl font-bold mb-2">Image List</h2>
+                <div id="imageList" class="bg-gray-800 p-2 rounded-lg overflow-y-auto max-h-[85vh]"></div>
+                <button id="downloadAllBtn" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded w-full text-sm">
+                    Download All
+                </button>
             </div>
-            <div class="md:w-2/3">
-                <h2 class="text-2xl font-bold mb-4">Selected Image</h2>
-                <div id="selectedImageContainer" class="bg-gray-800 p-4 rounded-lg flex items-center justify-center h-[60vh]">
-                    <img id="selectedImage" src="" alt="Selected Image" class="max-w-full max-h-full rounded-lg shadow-lg hidden">
+            <div class="md:w-4/5">
+                <h2 class="text-xl font-bold mb-2">Selected Image</h2>
+                <div id="selectedImageContainer" class="bg-gray-800 p-4 rounded-lg flex items-center justify-center h-[85vh]">
+                    <img id="selectedImage" src="" alt="Selected Image" class="max-w-full max-h-full object-contain rounded-lg shadow-lg hidden">
                     <p id="noImageSelected" class="text-gray-400">No image selected</p>
                 </div>
-                <div id="imageDetails" class="mt-4 bg-gray-800 p-4 rounded-lg hidden">
-                    <h3 class="text-xl font-semibold mb-2">Image Details</h3>
-                    <p id="imageName"></p>
-                    <p id="imageSize"></p>
-                    <p id="imageType"></p>
-                    <p id="imageLastModified"></p>
+                <div id="imageDetails" class="mt-2 bg-gray-800 p-2 rounded-lg hidden">
+                    <h3 class="text-lg font-semibold mb-1">Image Details</h3>
+                    <p id="imageName" class="text-sm"></p>
+                    <p id="imageSize" class="text-sm"></p>
+                    <p id="imageType" class="text-sm"></p>
+                    <p id="imageLastModified" class="text-sm"></p>
                 </div>
             </div>
         </div>
@@ -57,19 +59,17 @@
         const imageSize = document.getElementById('imageSize');
         const imageType = document.getElementById('imageType');
         const imageLastModified = document.getElementById('imageLastModified');
-        const folderInfo = document.getElementById('folderInfo');
+        const downloadAllBtn = document.getElementById('downloadAllBtn');
 
         const urlParams = new URLSearchParams(window.location.search);
         const folderName = urlParams.get('folder') || 'folder_1727827841836';
-
-        folderInfo.textContent = `Viewing folder: ${folderName}`;
 
         async function displayImages() {
             const folderRef = ref(storage, `images/${folderName}`);
             try {
                 const result = await listAll(folderRef);
                 if (result.items.length === 0) {
-                    imageList.innerHTML = '<p class="text-gray-400">No images found in this folder.</p>';
+                    imageList.innerHTML = '<p class="text-gray-400 text-sm">No images found in this folder.</p>';
                     return;
                 }
 
@@ -79,15 +79,16 @@
                     const url = await getDownloadURL(itemRef);
                     const metadata = await getMetadata(itemRef);
                     const listItem = document.createElement('div');
-                    listItem.className = 'cursor-pointer hover:bg-gray-700 p-2 rounded mb-2 flex items-center';
+                    listItem.className = 'cursor-pointer hover:bg-gray-700 p-1 rounded mb-1 flex items-center';
                     
                     const thumbnail = document.createElement('img');
                     thumbnail.src = url;
                     thumbnail.alt = itemRef.name;
-                    thumbnail.className = 'w-10 h-10 object-cover rounded mr-2';
+                    thumbnail.className = 'w-6 h-6 object-cover rounded mr-1';
                     
                     const nameSpan = document.createElement('span');
                     nameSpan.textContent = itemRef.name;
+                    nameSpan.className = 'text-xs truncate';
                     
                     listItem.appendChild(thumbnail);
                     listItem.appendChild(nameSpan);
@@ -106,7 +107,7 @@
                 }
             } catch (error) {
                 console.error("Error fetching images:", error);
-                imageList.innerHTML = '<p class="text-red-500">Error loading images. Please try again later.</p>';
+                imageList.innerHTML = '<p class="text-red-500 text-sm">Error loading images. Please try again later.</p>';
             }
         }
 
@@ -118,6 +119,29 @@
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
         }
+
+        async function downloadAllImages() {
+            const folderRef = ref(storage, `images/${folderName}`);
+            const zip = new JSZip();
+
+            try {
+                const result = await listAll(folderRef);
+                for (const itemRef of result.items) {
+                    const url = await getDownloadURL(itemRef);
+                    const response = await fetch(url);
+                    const blob = await response.blob();
+                    zip.file(itemRef.name, blob);
+                }
+
+                const content = await zip.generateAsync({type: "blob"});
+                saveAs(content, `${folderName}.zip`);
+            } catch (error) {
+                console.error("Error downloading images:", error);
+                alert("Error downloading images. Please try again later.");
+            }
+        }
+
+        downloadAllBtn.addEventListener('click', downloadAllImages);
 
         // Call displayImages when the script loads
         displayImages();
